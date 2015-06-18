@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">水利管理</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">设置</string>
+    <string name="pulltorefresh">下拉刷新</string>
+    <string name="lastupdate">最后更新</string>
+</resources>
