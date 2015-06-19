@@ -1649,7 +1649,7 @@ containing a value of this type.
         public static final int action_mode_bar=0x7f09002e;
         public static final int action_mode_bar_stub=0x7f09002d;
         public static final int action_mode_close_button=0x7f090020;
-        public static final int action_settings=0x7f090051;
+        public static final int action_settings=0x7f090052;
         public static final int activity_chooser_view_content=0x7f090021;
         public static final int always=0x7f090014;
         public static final int beginning=0x7f09001b;
@@ -1660,6 +1660,7 @@ containing a value of this type.
         public static final int dialog=0x7f090019;
         public static final int disableHome=0x7f09000d;
         public static final int dropdown=0x7f09001a;
+        public static final int editText1=0x7f09004c;
         public static final int edit_query=0x7f090033;
         public static final int end=0x7f09001c;
         public static final int expand_activities_button=0x7f090022;
@@ -1708,11 +1709,11 @@ containing a value of this type.
         public static final int textView3=0x7f090042;
         public static final int textView4=0x7f090043;
         public static final int title=0x7f090027;
-        public static final int tvgtophgt=0x7f090050;
-        public static final int tvq=0x7f09004f;
-        public static final int tvstnm=0x7f09004c;
-        public static final int tvtm=0x7f09004d;
-        public static final int tvz=0x7f09004e;
+        public static final int tvgtophgt=0x7f090051;
+        public static final int tvq=0x7f090050;
+        public static final int tvstnm=0x7f09004d;
+        public static final int tvtm=0x7f09004e;
+        public static final int tvz=0x7f09004f;
         public static final int up=0x7f090001;
         public static final int useLogo=0x7f090013;
         public static final int viewPager=0x7f090044;
@@ -1774,9 +1775,10 @@ containing a value of this type.
         public static final int head=0x7f03001a;
         public static final int history=0x7f03001b;
         public static final int my=0x7f03001c;
-        public static final int realtime=0x7f03001d;
-        public static final int realtime_item=0x7f03001e;
-        public static final int support_simple_spinner_dropdown_item=0x7f03001f;
+        public static final int query=0x7f03001d;
+        public static final int realtime=0x7f03001e;
+        public static final int realtime_item=0x7f03001f;
+        public static final int support_simple_spinner_dropdown_item=0x7f030020;
     }
     public static final class menu {
         public static final int act_main=0x7f0c0000;

@@ -1,12 +1,16 @@
 package com.easin.irri;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,12 +21,20 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,6 +72,7 @@ import android.widget.Toast;
 
 public class ActMain extends ActionBarActivity {
 	private String[] areas = new String[]{"加关注","查询","属性"};
+	private String[] areasmy = new String[]{"取消关注","查询","属性"};
 	private ViewPager mPager;//页卡内容
     private List<View> listViews; // Tab页面列表
     //private ImageView cursor;// 动画图片
@@ -69,211 +82,96 @@ public class ActMain extends ActionBarActivity {
     private int currIndex = 0;// 当前页卡编号
     private int bmpW;// 动画图片宽度	
     private int mdelay;
-    private MsgListView realtime; 
-    private MyListAdapter mlistada;
+    private MsgListView mrealtime; 
+    private MyListAdapter mrealtimeadp;
+    public Vector<Vector<STCDINFO>> mlistdata;
+    
+    private MsgListView mmyView; 
+    private MyListAdapter mmyadp;
+    //public Vector<STCDINFO> mmydata;    
+
     private Map<String,String> msetup;
     private List<String> mmy;
-    public Vector<STCDINFO> mStcd;
     @Override
     protected void onPause(){
     	super.onPause();
     	put(msetup);
     	mmyput(mmy);
     }
-
+    private List<NameValuePair> PrepareCmd(int idx){
+    	List<NameValuePair> ret = new ArrayList<NameValuePair>();
+    	switch(idx){
+    	case 0:{
+    		NameValuePair cmd = new BasicNameValuePair("cmd", "realtime");
+    		ret.add(cmd);
+    	}
+    		break;
+    	case 1:
+    		
+    		break;
+    	case 2:{
+    		NameValuePair cmd = new BasicNameValuePair("cmd", "my");
+    		ret.add(cmd);
+    		StringBuilder sb = new StringBuilder();
+    		for(String stcd : mmy){
+    			sb.append(stcd).append(",");
+    		}
+    		if(sb.length() > 0){
+    			sb.append("0");
+    			NameValuePair stcds = new BasicNameValuePair("stcds", sb.toString());
+    			ret.add(stcds);
+    		}
+    		
+    	}
+    		break;
+    	case 3:
+    		break;
+    	}
+    	return ret;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	msetup = get();
     	mmy = mmyget();
-    	mStcd = new Vector<STCDINFO>();
+    	mlistdata = new Vector<Vector<STCDINFO>>();
+    	mlistdata.setSize(5);
+    	mlistdata.set(0, new Vector<STCDINFO>());
+    	mlistdata.set(2, new Vector<STCDINFO>());
         setContentView(R.layout.act_main);
-        mdelay = 5;
+        mdelay = 50;
         InitTextView();
         InitViewPager();
-        
-        //刷新监听，此处实现真正刷新
-		realtime.setonRefreshListener(new OnRefreshListener() {
-			public void onRefresh() {
-				new AsyncTask<Object, Object, Object>() {
-					protected Object doInBackground(Object... params) {
-				        HttpGet httpRequest = new HttpGet("http://test.gwgz.com/realtime.ashx?cmd=RealTime");
-				         try{
-				            HttpClient httpClient = new DefaultHttpClient();
-				            HttpResponse httpResponse = httpClient.execute(httpRequest);
-				            if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
-				                String strResult = EntityUtils.toString(httpResponse.getEntity());
-				                return strResult;
-				            } else{
-				                return null;
-				            }
-				         }catch(ClientProtocolException e){
-				        	 e.printStackTrace();
-				         }catch (IOException e) {
-				            e.printStackTrace();
-				         }
-				         return null;
-					}
-
-					@Override
-					protected void onPostExecute(Object result) {
-						super.onPostExecute(result);
-						
-						try{
-				            //创建一个JSON对象
-				            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
-				            int jsoncmd = jsonObject.getInt("cmdstatus");
-				            if(jsoncmd == 1){
-				            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
-				            	for(int i = 0; i < jsonrows.length(); i++){
-				            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
-				            		STCDINFO info = new STCDINFO();
-				            		info.STCD = jsonObject2.getString(0).trim();
-				            		info.STNM = jsonObject2.getString(1).trim();
-				            		info.TM = jsonObject2.getString(2).trim();
-				            		info.Z = jsonObject2.getString(3).trim();
-				            		info.Q = jsonObject2.getString(4).trim();
-				            		info.GTOPHGT = jsonObject2.getString(5).trim();
-				            		int idx = Collections.binarySearch(mStcd, info,new STCDINFO_CMP());
-				            		if(idx < 0){
-				            			mStcd.add(info);
-				            			Collections.sort(mStcd,new STCDINFO_CMP());
-				            		}else if(idx < mStcd.size()){
-				            			mStcd.set(idx, info);
-				            		}
-				            	}
-				            	
-				            	/*
-					            StringBuilder builder = new StringBuilder();
-					            for(int i = 0; i<jsonArray.length(); i++){
-					                //新建一个JSON对象，该对象是某个数组里的其中一个对象
-					                JSONObject jsonObject2 = (JSONObject)jsonArray.opt(i);
-					                builder.append(jsonObject2.getString("id")); //获取数据
-					                builder.append(jsonObject2.getString("title"));
-					                builder.append(jsonObject2.getString("name"));
-					            }
-					            */
-				            }
-				            //myTextView.setText(builder.toString());
-				         }
-				         catch (JSONException e) {
-				            e.printStackTrace();
-				         }						
-					
-						mlistada.notifyDataSetChanged();
-						// new MsgLoad().execute();//刷新监听中，真正执行刷新动作
-						realtime.onRefreshComplete();
-					}
-				}.execute();
-			}
-		});
-		realtime.setItemsCanFocus(false);
-		realtime.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);        
-        
-		mlistada = new MyListAdapter(this);
-		realtime.setAdapter(mlistada);
-		
-		realtime.setOnItemLongClickListener(new OnItemLongClickListener() {  
-	        @Override  
-	        public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position,  
-	            long id) {  
-	        //View v=adapterView.getChildAt(position);  
-	        //v.setBackgroundColor(Color.RED);  
-	        //Toast.makeText(ActMain.this,"您选择了" + Integer.toString(position), Toast.LENGTH_SHORT).show();
-	        	final int idx = position;
-	        	   new AlertDialog.Builder(ActMain.this).setTitle(mStcd.get(position-1).STNM).setItems(areas,new DialogInterface.OnClickListener(){  
-	        		      public void onClick(DialogInterface dialog, int which){  
-	        		       //Toast.makeText(ActMain.this, "您已经选择了: " + which + ":" + areas[which],Toast.LENGTH_LONG).show();  
-	        		       dialog.dismiss();
-	        		       if(which == 0){
-			            		int idx1 = Collections.binarySearch(mmy, mStcd.get(idx-1).STCD);
-			            		if(idx1 < 0){
-			            			mmy.add(mStcd.get(idx-1).STCD);
-			            			Collections.sort(mmy);
-			            		}       		    	   
-	        		       }else if(which == 2){
-	        		    	   showprop(mStcd.get(idx-1).STCD);
-	        		       }
-	        		      }  
-	        		   }).show();  	        	
-	        	
-			return true;  
-	        }  
-	    });  		
-		
-		
+        InitRealTime();
+        InitMyView();
 		new Timer().schedule(new TimerTask() {              
             @Override  
             public void run() {
             	if(currIndex == 0) 
-            		realtime.refreshListener.onRefresh();
+            		mrealtime.refreshListener.onRefresh();
+            	else if(currIndex == 2)
+            		mmyView.refreshListener.onRefresh();
             }   
         }, 100, mdelay*1000);   		
-        
     }
     
-    private void showprop(String stcd){
-        HttpGet httpRequest = new HttpGet("http://test.gwgz.com/realtime.ashx?cmd=prop&stcd=" + stcd);
-        try{
-           HttpClient httpClient = new DefaultHttpClient();
-           HttpResponse httpResponse = httpClient.execute(httpRequest);
-           if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
-               String strResult = EntityUtils.toString(httpResponse.getEntity());
-				try{
-		            //创建一个JSON对象
-		            JSONObject jsonObject = new JSONObject(strResult.toString());//.getJSONObject("parent");
-		            int jsoncmd = jsonObject.getInt("cmdstatus");
-		            if(jsoncmd == 1){
-		            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
-		            	for(int i = 0; i < jsonrows.length(); i++){
-		            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
-		            		List<String> arl = new ArrayList<String>();
-		            		for(int j = 0; j < jsonObject2.length(); j++){
-		            			arl.add(jsonObject2.opt(j).toString().trim());
-		            		}
-		            		String [] strItems = (String [])arl.toArray(new String[arl.size()]);
-		 	        	   new AlertDialog.Builder(ActMain.this).setTitle("属性").setItems(strItems,new DialogInterface.OnClickListener(){  
-			        		      public void onClick(DialogInterface dialog, int which){  
-			        		       dialog.dismiss();  
-			        		      }  
-			        		   }).show(); 		            		
-		            		
-		            		
-		            		break;
-		            	}
-		            	
-		            	/*
-			            StringBuilder builder = new StringBuilder();
-			            for(int i = 0; i<jsonArray.length(); i++){
-			                //新建一个JSON对象，该对象是某个数组里的其中一个对象
-			                JSONObject jsonObject2 = (JSONObject)jsonArray.opt(i);
-			                builder.append(jsonObject2.getString("id")); //获取数据
-			                builder.append(jsonObject2.getString("title"));
-			                builder.append(jsonObject2.getString("name"));
-			            }
-			            */
-		            }
-		            //myTextView.setText(builder.toString());
-		         }
-		         catch (JSONException e) {
-		            e.printStackTrace();
-		         }						               
-               
-               
-           } else{
-           }
-        }catch(ClientProtocolException e){
-       	 e.printStackTrace();
-        }catch (IOException e) {
-           e.printStackTrace();
-        }
-    }
+    private void InitViewPager() {    // 初始化ViewPager
+        mPager = (ViewPager) findViewById(R.id.viewPager);
+        listViews = new ArrayList<View>();
+        LayoutInflater mInflater = getLayoutInflater();
+        listViews.add(mInflater.inflate(R.layout.realtime, null));
+        listViews.add(mInflater.inflate(R.layout.history, null));
+        listViews.add(mInflater.inflate(R.layout.my, null));
+        listViews.add(mInflater.inflate(R.layout.about, null));
+        mrealtime = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
+        mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
 
-    
-    /**
-     * 初始化头标
-*/
-    private void InitTextView() {
+        mPager.setAdapter(new MyPagerAdapter(listViews));
+        mPager.setCurrentItem(0);
+        mPager.setOnPageChangeListener(new MyOnPageChangeListener());
+    }    
+
+    private void InitTextView() {// 初始化头标
         t1 = (View) findViewById(R.id.textView1);
         t2 = (View) findViewById(R.id.textView2);
         t3 = (View) findViewById(R.id.textView3);
@@ -283,27 +181,8 @@ public class ActMain extends ActionBarActivity {
         t2.setOnClickListener(new MyOnClickListener(1));
         t3.setOnClickListener(new MyOnClickListener(2));
         t4.setOnClickListener(new MyOnClickListener(3));
-        
-
-    }    
+    }      
     
-    /**
-     * 初始化ViewPager
-*/
-    private void InitViewPager() {
-        mPager = (ViewPager) findViewById(R.id.viewPager);
-        listViews = new ArrayList<View>();
-        LayoutInflater mInflater = getLayoutInflater();
-        listViews.add(mInflater.inflate(R.layout.realtime, null));
-        realtime = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
-        listViews.add(mInflater.inflate(R.layout.history, null));
-        listViews.add(mInflater.inflate(R.layout.my, null));
-        listViews.add(mInflater.inflate(R.layout.about, null));
-        mPager.setAdapter(new MyPagerAdapter(listViews));
-        mPager.setCurrentItem(0);
-        mPager.setOnPageChangeListener(new MyOnPageChangeListener());
-    }    
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -323,9 +202,7 @@ public class ActMain extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
     
-    /**
-     * 头标点击监听
-*/
+    // * 头标点击监听
     public class MyOnClickListener implements View.OnClickListener {
         private int index = 0;
 
@@ -336,12 +213,15 @@ public class ActMain extends ActionBarActivity {
         @Override
         public void onClick(View v) {
             mPager.setCurrentItem(index);
+            if(index == 0){
+            	mrealtime.refreshListener.onRefresh();
+            }else if(index == 2){
+            	mmyView.refreshListener.onRefresh();
+            }
         }
     };    
     
-    /**
-     * ViewPager适配器
-*/
+    // * ViewPager适配器
     public class MyPagerAdapter extends PagerAdapter {
         public List<View> mListViews;
 
@@ -483,13 +363,14 @@ public class ActMain extends ActionBarActivity {
     
 	class MyListAdapter extends BaseAdapter {
 		private int[] colors = new int[] { 0xff626569, 0xff4f5257 };
-
-		public MyListAdapter(Context context) {
+		private int midx = 0;
+		public MyListAdapter(Context context,int _idx) {
 			mContext = context;
+			midx = _idx;
 		}
 
 		public int getCount() {
-			return mStcd.size();// mListStr.length;
+			return mlistdata.get(midx).size();// mListStr.length;
 		}
 
 		@Override
@@ -526,11 +407,11 @@ public class ActMain extends ActionBarActivity {
 			
 			int colorPos = position % colors.length;
 			convertView.setBackgroundColor(colors[colorPos]);
-			title.setText(mStcd.get(position).STNM);//("Hello");//
-			text.setText(mStcd.get(position).TM);//("2015-06-21");//
-			tvz.setText("水位：" + mStcd.get(position).Z);
-			tvq.setText("流量：" + mStcd.get(position).Q);
-			tvgtophgt.setText("并度：" + mStcd.get(position).GTOPHGT);
+			title.setText(mlistdata.get(midx).get(position).STNM);//("Hello");//
+			text.setText(mlistdata.get(midx).get(position).TM);//("2015-06-21");//
+			tvz.setText("水位：" + mlistdata.get(midx).get(position).Z);
+			tvq.setText("流量：" + mlistdata.get(midx).get(position).Q);
+			tvgtophgt.setText("并度：" + mlistdata.get(midx).get(position).GTOPHGT);
 			//iamge.setImageResource(R.drawable.jay);
 			return convertView;
 		}
@@ -538,12 +419,8 @@ public class ActMain extends ActionBarActivity {
 		private Context mContext;
 
 	}
-
-	/**
-	 * 向本地写入数据
-	 * */
+	// 向本地写入数据
 	private void put(Map<String,String> list) {
-
 		try {
 			// 打开文件
 			File f = new File(getFilesDir(),"irri_setup.dat");
@@ -563,9 +440,7 @@ public class ActMain extends ActionBarActivity {
 		}
 	}
 
-	/**
-	 * 从本地读取数据
-	 * */
+	// * 从本地读取数据
 	@SuppressWarnings("unchecked")
 	private Map<String,String> get() {
 		Map<String,String> list = new HashMap<String,String>();
@@ -596,9 +471,7 @@ public class ActMain extends ActionBarActivity {
 		return list;
 	}
 	
-	/**
-	 * 向本地写入数据
-	 * */
+	// * 向本地写入数据
 	private void mmyput(List<String> list) {
 
 		try {
@@ -620,9 +493,7 @@ public class ActMain extends ActionBarActivity {
 		}
 	}
 
-	/**
-	 * 从本地读取数据
-	 * */
+	// * 从本地读取数据
 	@SuppressWarnings("unchecked")
 	private List<String> mmyget() {
 		List<String> list = new ArrayList<String>();
@@ -652,5 +523,278 @@ public class ActMain extends ActionBarActivity {
 
 		return list;
 	}	
+	
+	// Fast Implementation
+	private String inputStreamToString(InputStream is) throws IOException {
+		String ret = "";
+	    String line = "";
+	    StringBuilder total = new StringBuilder();
+	     
+	    // Wrap a BufferedReader around the InputStream
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+	 
+	    // Read response until the end
+	    while ((line = rd.readLine()) != null) {
+	        total.append(line);
+	    }
+	     
+	    // Return full string
+	    ret = total.toString();
+	    return ret;
+	}
+	
+    private void InitRealTime(){
+        //刷新监听，此处实现真正刷新
+    	//final int idxlist = i;
+		mrealtime.setonRefreshListener(new OnRefreshListener() {
+			public void onRefresh() {
+				new AsyncTask<Object, Object, Object>() {
+					protected Object doInBackground(Object... params) {
+				        HttpPost httpRequest = new HttpPost("http://192.168.18.106/realtime.ashx");
+				        List<NameValuePair> cmdlist = PrepareCmd(0);
+				        try {
+							HttpEntity httpEntity = new UrlEncodedFormEntity(cmdlist);
+							httpRequest.setEntity(httpEntity);
+							//httpRequest.addHeader("Content-type", "application/x-www-form-urlencoded");
+							
+						} catch (UnsupportedEncodingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+				         try{
+				            HttpClient httpClient = new DefaultHttpClient();
+				            HttpResponse httpResponse = httpClient.execute(httpRequest);
+				            if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+				            	HttpEntity res = httpResponse.getEntity();
+				            	InputStream is = res.getContent();
+				            	return inputStreamToString(is);
+				            } else{
+				                return null;
+				            }
+				         }catch(ClientProtocolException e){
+				        	 e.printStackTrace();
+				         }catch (IOException e) {
+				            e.printStackTrace();
+				         }catch(Exception e){
+				        	 e.printStackTrace();
+				         }
+				         return null;
+					}
+
+					@Override
+					protected void onPostExecute(Object result) {
+						super.onPostExecute(result);
+						try{
+				            //创建一个JSON对象
+				            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+				            int jsoncmd = jsonObject.getInt("cmdstatus");
+				            if(jsoncmd == 1){
+				            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+				            	for(int i = 0; i < jsonrows.length(); i++){
+				            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
+				            		STCDINFO info = new STCDINFO();
+				            		info.STCD = jsonObject2.getString(0).trim();
+				            		info.STNM = jsonObject2.getString(1).trim();
+				            		info.TM = jsonObject2.getString(2).trim();
+				            		info.Z = jsonObject2.getString(3).trim();
+				            		info.Q = jsonObject2.getString(4).trim();
+				            		info.GTOPHGT = jsonObject2.getString(5).trim();
+				            		int idx = Collections.binarySearch(mlistdata.get(0), info,new STCDINFO_CMP());
+				            		if(idx < 0){
+				            			mlistdata.get(0).add(info);
+				            			Collections.sort(mlistdata.get(0),new STCDINFO_CMP());
+				            		}else if(idx < mlistdata.get(0).size()){
+				            			mlistdata.get(0).set(idx, info);
+				            		}
+				            	}
+				            }
+				         }
+				         catch (JSONException e) {
+				            e.printStackTrace();
+				         }						
+						mrealtimeadp.notifyDataSetChanged();
+						mrealtime.onRefreshComplete();
+					}
+				}.execute();
+			}
+		});
+		mrealtime.setItemsCanFocus(false);
+		mrealtime.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);        
+        
+		mrealtimeadp = new MyListAdapter(this,0);
+		mrealtime.setAdapter(mrealtimeadp);
+		
+		mrealtime.setOnItemLongClickListener(new OnItemLongClickListener() {  
+	        @Override  
+	        public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position,  
+	            long id) {  
+	        	final int idx = position;
+	        	   new AlertDialog.Builder(ActMain.this).setTitle(mlistdata.get(0).get(position-1).STNM).setItems(areas,new DialogInterface.OnClickListener(){  
+	        		      public void onClick(DialogInterface dialog, int which){  
+	        		       dialog.dismiss();
+	        		       if(which == 0){
+			            		int idx1 = Collections.binarySearch(mmy, mlistdata.get(0).get(idx-1).STCD);
+			            		if(idx1 < 0){
+			            			mmy.add(mlistdata.get(0).get(idx-1).STCD);
+			            			Collections.sort(mmy);
+			            		}       		    	   
+	        		       }else if(which == 2){
+	        		    	   showprop(mlistdata.get(0).get(idx-1).STCD);
+	        		       }
+	        		      }  
+	        		   }).show();  	        	
+	        	
+			return true;  
+	        }  
+	    });  		
+		    	
+    }
+    
+    private void InitMyView(){
+		mmyView.setonRefreshListener(new OnRefreshListener() {        //刷新监听，此处实现真正刷新
+			public void onRefresh() {
+				new AsyncTask<Object, Object, Object>() {
+					protected Object doInBackground(Object... params) {
+				        HttpPost httpRequest = new HttpPost("http://192.168.18.106/realtime.ashx");
+				        List<NameValuePair> cmdlist = PrepareCmd(2);
+				        try {
+							HttpEntity httpEntity = new UrlEncodedFormEntity(cmdlist);
+							httpRequest.setEntity(httpEntity);
+						} catch (UnsupportedEncodingException e1) {
+							e1.printStackTrace();
+						}
+				         try{
+				            HttpClient httpClient = new DefaultHttpClient();
+				            HttpResponse httpResponse = httpClient.execute(httpRequest);
+				            if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+				            	HttpEntity res = httpResponse.getEntity();
+				            	InputStream is = res.getContent();
+				            	return inputStreamToString(is);
+				            } else{
+				                return null;
+				            }
+				         }catch(ClientProtocolException e){
+				        	 e.printStackTrace();
+				         }catch (IOException e) {
+				            e.printStackTrace();
+				         }catch(Exception e){
+				        	 e.printStackTrace();
+				         }
+				         return null;
+					}
+
+					@Override
+					protected void onPostExecute(Object result) {
+						super.onPostExecute(result);
+						try{
+				            //创建一个JSON对象
+				            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+				            int jsoncmd = jsonObject.getInt("cmdstatus");
+				            if(jsoncmd == 1){
+				            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+				            	for(int i = 0; i < jsonrows.length(); i++){
+				            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
+				            		STCDINFO info = new STCDINFO();
+				            		info.STCD = jsonObject2.getString(0).trim();
+				            		info.STNM = jsonObject2.getString(1).trim();
+				            		info.TM = jsonObject2.getString(2).trim();
+				            		info.Z = jsonObject2.getString(3).trim();
+				            		info.Q = jsonObject2.getString(4).trim();
+				            		info.GTOPHGT = jsonObject2.getString(5).trim();
+				            		int idx = Collections.binarySearch(mlistdata.get(2), info,new STCDINFO_CMP());
+				            		if(idx < 0){
+				            			mlistdata.get(2).add(info);
+				            			Collections.sort(mlistdata.get(2),new STCDINFO_CMP());
+				            		}else if(idx < mlistdata.get(2).size()){
+				            			mlistdata.get(2).set(idx, info);
+				            		}
+				            	}
+				            }
+				         }
+				         catch (JSONException e) {
+				            e.printStackTrace();
+				         }						
+						mmyadp.notifyDataSetChanged();
+						mmyView.onRefreshComplete();
+					}
+				}.execute();
+			}
+		});
+		mmyView.setItemsCanFocus(false);
+		mmyView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);        
+        
+		mmyadp = new MyListAdapter(this,2);
+		mmyView.setAdapter(mmyadp);
+		
+		mmyView.setOnItemLongClickListener(new OnItemLongClickListener() {  
+	        @Override  
+	        public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position,  
+	            long id) {  
+	        	final int idx = position;
+	        	   new AlertDialog.Builder(ActMain.this).setTitle(mlistdata.get(2).get(position-1).STNM).setItems(areasmy,new DialogInterface.OnClickListener(){  
+	        		      public void onClick(DialogInterface dialog, int which){  
+	        		       dialog.dismiss();
+	        		       if(which == 0){
+	        		    	   mmy.remove(mlistdata.get(2).get(idx-1).STCD);
+	        		    	   mmyView.refreshListener.onRefresh();
+	        		    	   mlistdata.get(2).remove(idx-1);
+			            		//int idx1 = Collections.binarySearch(mmy, mlistdata.get(2).get(idx-1).STCD);
+			            		//if(idx1 < 0){
+			            		//	mmy.add(mlistdata.get(2).get(idx-1).STCD);
+			            		//	Collections.sort(mmy);
+			            		//}       		    	   
+	        		       }else if(which == 2){
+	        		    	   showprop(mlistdata.get(2).get(idx-1).STCD);
+	        		       }
+	        		      }  
+	        		   }).show();  	        	
+	        	
+			return true;  
+	        }  
+	    });  		
+		    	
+    }    
+        
+    private void showprop(String stcd){
+        HttpGet httpRequest = new HttpGet("http://test.gwgz.com/realtime.ashx?cmd=prop&stcd=" + stcd);
+        try{
+           HttpClient httpClient = new DefaultHttpClient();
+           HttpResponse httpResponse = httpClient.execute(httpRequest);
+           if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+               String strResult = EntityUtils.toString(httpResponse.getEntity());
+				try{
+		            //创建一个JSON对象
+		            JSONObject jsonObject = new JSONObject(strResult.toString());//.getJSONObject("parent");
+		            int jsoncmd = jsonObject.getInt("cmdstatus");
+		            if(jsoncmd == 1){
+		            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+		            	for(int i = 0; i < jsonrows.length(); i++){
+		            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
+		            		List<String> arl = new ArrayList<String>();
+		            		for(int j = 0; j < jsonObject2.length(); j++){
+		            			arl.add(jsonObject2.opt(j).toString().trim());
+		            		}
+		            		String [] strItems = (String [])arl.toArray(new String[arl.size()]);
+		 	        	   new AlertDialog.Builder(ActMain.this).setTitle("属性").setItems(strItems,new DialogInterface.OnClickListener(){  
+			        		      public void onClick(DialogInterface dialog, int which){  
+			        		       dialog.dismiss();  
+			        		      }  
+			        		   }).show(); 		            		
+		            		break;
+		            	}
+		            }
+		         }
+		         catch (JSONException e) {
+		            e.printStackTrace();
+		         }						               
+           } else{
+           }
+        }catch(ClientProtocolException e){
+       	 e.printStackTrace();
+        }catch (IOException e) {
+           e.printStackTrace();
+        }
+    }
+    
 	
 }

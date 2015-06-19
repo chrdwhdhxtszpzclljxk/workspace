@@ -1,9 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#152222"
-    android:orientation="vertical" >
-    
-
-</LinearLayout>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  >
+  <LinearLayout android:orientation="vertical"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="#000000">       
+	    <com.easin.irri.MsgListView
+	    android:id="@android:id/list"
+	    android:layout_height="0dp"
+	    android:layout_width="fill_parent"
+	    android:layout_weight="1.0"
+	    android:drawSelectorOnTop="false"
+	    android:scrollbars="vertical"
+	    android:fadingEdgeLength="0dip" 
+	   
+	    android:dividerHeight="2.0dip"
+	    android:cacheColorHint="#00000000" 
+	    android:paddingBottom="0dp"/>
+  </LinearLayout>
+  <LinearLayout
+      android:id="@+id/msg_list_load"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent" >      
+    <LinearLayout android:id="@android:id/empty"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent" >       
+      <include
+        android:id="@android:id/empty"
+        layout="@layout/empty_loading"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />      
+     </LinearLayout>
+  </LinearLayout>
+</RelativeLayout>
