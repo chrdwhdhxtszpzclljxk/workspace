@@ -64,6 +64,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -630,7 +631,8 @@ public class ActMain extends ActionBarActivity {
 	            long id) {  
 	        	final int idx = position;
 	        	   new AlertDialog.Builder(ActMain.this).setTitle(mlistdata.get(0).get(position-1).STNM).setItems(areas,new DialogInterface.OnClickListener(){  
-	        		      public void onClick(DialogInterface dialog, int which){  
+	        		      public void onClick(DialogInterface dialog, int which){
+	        		    	  
 	        		       dialog.dismiss();
 	        		       if(which == 0){
 			            		int idx1 = Collections.binarySearch(mmy, mlistdata.get(0).get(idx-1).STCD);
@@ -638,7 +640,18 @@ public class ActMain extends ActionBarActivity {
 			            			mmy.add(mlistdata.get(0).get(idx-1).STCD);
 			            			Collections.sort(mmy);
 			            		}       		    	   
-	        		       }else if(which == 2){
+	        		       }else if (which == 1){
+	        		    	   LayoutInflater inflater = getLayoutInflater();
+	        		    	   View dialoglayout = inflater.inflate(R.layout.query, null);
+	        		    	   EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
+	        		    	   name.setText(mlistdata.get(0).get(idx-1).STNM);
+	        		    	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
+	        		    	   builder.setView(dialoglayout);
+	        		    	   builder.setPositiveButton("确定", null);
+	        		    	   builder.setNegativeButton("取消",null);
+	        		    	   builder.show();
+	        		       }
+	        		       else if(which == 2){
 	        		    	   showprop(mlistdata.get(0).get(idx-1).STCD);
 	        		       }
 	        		      }  

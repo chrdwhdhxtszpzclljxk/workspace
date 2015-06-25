@@ -45,6 +45,43 @@ namespace irri
 			constr = System.Configuration.ConfigurationManager.ConnectionStrings["gtmasqlserver"].ConnectionString;
         }
 
+        public recordset GetHistoryByName(String name)
+        {
+            recordset rd = new recordset();
+            rd.cols = new ArrayList();
+            rd.rows = new ArrayList();
+
+            try
+            {
+                SqlConnection sc = new SqlConnection(constr);
+                SqlCommand sm = new SqlCommand();
+                sm.CommandType = CommandType.StoredProcedure;
+                sm.CommandText = "[irri_gethistorybyname]";
+                sm.Connection = sc;
+                SqlParameter param0 = new SqlParameter("@name", name);
+                sm.Parameters.Add(param0);
+                sc.Open();
+                SqlDataReader dr = sm.ExecuteReader();
+                if (dr.HasRows)
+                {
+                    for (int i = 0; i < dr.FieldCount; i++) rd.cols.Add(dr.GetName(i));
+                    while (dr.Read())
+                    {
+                        object[] ob = new object[dr.FieldCount];
+                        dr.GetValues(ob);
+                        rd.rows.Add(ob);
+                    }
+                }
+                dr.Close();
+                sc.Close();
+            }
+            catch (Exception e)
+            {
+                rd.name = e.ToString();
+            }
+            return rd;
+        }
+
         public recordset GetMy(String stcds)
         {
             recordset rd = new recordset();
