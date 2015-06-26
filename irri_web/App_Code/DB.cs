@@ -45,7 +45,7 @@ namespace irri
 			constr = System.Configuration.ConfigurationManager.ConnectionStrings["gtmasqlserver"].ConnectionString;
         }
 
-        public recordset GetHistoryByName(String name)
+        public recordset GetHistoryByName(String name, String begin,String end)
         {
             recordset rd = new recordset();
             rd.cols = new ArrayList();
@@ -58,8 +58,12 @@ namespace irri
                 sm.CommandType = CommandType.StoredProcedure;
                 sm.CommandText = "[irri_gethistorybyname]";
                 sm.Connection = sc;
-                SqlParameter param0 = new SqlParameter("@name", name);
+                SqlParameter param0 = new SqlParameter("@stnm", name);
                 sm.Parameters.Add(param0);
+                SqlParameter param1 = new SqlParameter("@begind", begin);
+                sm.Parameters.Add(param1);
+                SqlParameter param2 = new SqlParameter("@endd", end);
+                sm.Parameters.Add(param2);
                 sc.Open();
                 SqlDataReader dr = sm.ExecuteReader();
                 if (dr.HasRows)

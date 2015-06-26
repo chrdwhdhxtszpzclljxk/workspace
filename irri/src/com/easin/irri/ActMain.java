@@ -49,6 +49,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -64,6 +65,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -74,6 +76,7 @@ import android.widget.Toast;
 public class ActMain extends ActionBarActivity {
 	private String[] areas = new String[]{"加关注","查询","属性"};
 	private String[] areasmy = new String[]{"取消关注","查询","属性"};
+	private String stnmh,sbegin,send;
 	private ViewPager mPager;//页卡内容
     private List<View> listViews; // Tab页面列表
     //private ImageView cursor;// 动画图片
@@ -89,6 +92,9 @@ public class ActMain extends ActionBarActivity {
     
     private MsgListView mmyView; 
     private MyListAdapter mmyadp;
+    
+    private MsgListView mhistoryView; 
+    private MyListAdapter mhistoryadp;    
     //public Vector<STCDINFO> mmydata;    
 
     private Map<String,String> msetup;
@@ -133,11 +139,15 @@ public class ActMain extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
+    	stnmh = "10001001";
+    	sbegin = "";
+    	send = "";
     	msetup = get();
     	mmy = mmyget();
     	mlistdata = new Vector<Vector<STCDINFO>>();
     	mlistdata.setSize(5);
     	mlistdata.set(0, new Vector<STCDINFO>());
+    	mlistdata.set(1, new Vector<STCDINFO>());
     	mlistdata.set(2, new Vector<STCDINFO>());
         setContentView(R.layout.act_main);
         mdelay = 50;
@@ -145,11 +155,14 @@ public class ActMain extends ActionBarActivity {
         InitViewPager();
         InitRealTime();
         InitMyView();
+        InitHistory();
 		new Timer().schedule(new TimerTask() {              
             @Override  
             public void run() {
             	if(currIndex == 0) 
             		mrealtime.refreshListener.onRefresh();
+            	else if(currIndex == 1)
+            		mhistoryView.refreshListener.onRefresh();
             	else if(currIndex == 2)
             		mmyView.refreshListener.onRefresh();
             }   
@@ -166,6 +179,7 @@ public class ActMain extends ActionBarActivity {
         listViews.add(mInflater.inflate(R.layout.about, null));
         mrealtime = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
         mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
+        mhistoryView = (MsgListView) listViews.get(1).findViewById(android.R.id.list);
 
         mPager.setAdapter(new MyPagerAdapter(listViews));
         mPager.setCurrentItem(0);
@@ -216,6 +230,10 @@ public class ActMain extends ActionBarActivity {
             mPager.setCurrentItem(index);
             if(index == 0){
             	mrealtime.refreshListener.onRefresh();
+            }
+            else if(index == 1){
+            	//mhistoryView.refreshListener.onRefresh();
+            		
             }else if(index == 2){
             	mmyView.refreshListener.onRefresh();
             }
@@ -544,6 +562,129 @@ public class ActMain extends ActionBarActivity {
 	    return ret;
 	}
 	
+
+    private void InitHistory(){
+        //刷新监听，此处实现真正刷新
+    	//final int idxlist = i;
+		mhistoryView.setonRefreshListener(new OnRefreshListener() {
+			public void onRefresh() {
+				new AsyncTask<Object, Object, Object>() {
+					protected Object doInBackground(Object... params) {
+				        HttpGet httpRequest = new HttpGet("http://192.168.18.106/realtime.ashx?cmd=gethistorybyname&stnm=" + stnmh + "&sbegin=" + sbegin + "&send=" + send);
+				         try{
+				            HttpClient httpClient = new DefaultHttpClient();
+				            HttpResponse httpResponse = httpClient.execute(httpRequest);
+				            if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+				            	HttpEntity res = httpResponse.getEntity();
+				            	InputStream is = res.getContent();
+				            	return inputStreamToString(is);
+				            } else{
+				                return null;
+				            }
+				         }catch(ClientProtocolException e){
+				        	 e.printStackTrace();
+				         }catch (IOException e) {
+				            e.printStackTrace();
+				         }catch(Exception e){
+				        	 e.printStackTrace();
+				         }
+				         return null;
+					}
+
+					@Override
+					protected void onPostExecute(Object result) {
+						super.onPostExecute(result);
+						try{
+				            //创建一个JSON对象
+				            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+				            int jsoncmd = jsonObject.getInt("cmdstatus");
+				            if(jsoncmd == 1){
+				            	mlistdata.get(1).clear();
+				            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+				            	for(int i = 0; i < jsonrows.length(); i++){
+				            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
+				            		STCDINFO info = new STCDINFO();
+				            		info.STCD = jsonObject2.getString(0).trim();
+				            		info.STNM = jsonObject2.getString(1).trim();
+				            		info.TM = jsonObject2.getString(2).trim();
+				            		info.Z = jsonObject2.getString(3).trim();
+				            		info.Q = jsonObject2.getString(4).trim();
+				            		info.GTOPHGT = jsonObject2.getString(5).trim();
+				            		//int idx = Collections.binarySearch(mlistdata.get(1), info,new STCDINFO_CMP());
+				            		//if(idx < 0){
+				            			mlistdata.get(1).add(info);
+				            			//Collections.sort(mlistdata.get(1),new STCDINFO_CMP());
+				            		//}else if(idx < mlistdata.get(1).size()){
+				            		//	mlistdata.get(1).set(idx, info);
+				            		//}
+				            	}
+				            }
+				         }
+				         catch (JSONException e) {
+				            e.printStackTrace();
+				         }						
+						mhistoryadp.notifyDataSetChanged();
+						mhistoryView.onRefreshComplete();
+					}
+				}.execute();
+			}
+		});
+		mhistoryView.setItemsCanFocus(false);
+		mhistoryView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);        
+        
+		mhistoryadp = new MyListAdapter(this,1);
+		mhistoryView.setAdapter(mhistoryadp);
+		
+		mhistoryView.setOnItemLongClickListener(new OnItemLongClickListener() {  
+	        @Override  
+	        public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position,  
+	            long id) {  
+	        	final int idx = position;
+	        	   new AlertDialog.Builder(ActMain.this).setTitle(mlistdata.get(1).get(position-1).STNM).setItems(areas,new DialogInterface.OnClickListener(){  
+	        		      public void onClick(DialogInterface dialog, int which){
+	        		    	  
+	        		       dialog.dismiss();
+	        		       if(which == 0){
+			            		int idx1 = Collections.binarySearch(mmy, mlistdata.get(1).get(idx-1).STCD);
+			            		if(idx1 < 0){
+			            			mmy.add(mlistdata.get(1).get(idx-1).STCD);
+			            			Collections.sort(mmy);
+			            		}       		    	   
+	        		       }else if (which == 1){
+	        		    	   LayoutInflater inflater = getLayoutInflater();
+	        		    	   final View dialoglayout = inflater.inflate(R.layout.query, null);
+	        		    	   EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
+	        		    	   name.setText(mlistdata.get(1).get(idx-1).STNM);
+	        		    	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
+	        		    	   builder.setView(dialoglayout);
+	        		    	   builder.setPositiveButton("确定", new OnClickListener() {
+	        		    		   @Override
+	        		    		   public void onClick(DialogInterface dialog, int which) {
+	        		    			   String strname = ((EditText)dialoglayout.findViewById(R.id.etname)).getText().toString();
+	        		    			   DatePicker dtbegin  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker1));
+	        		    			   String sbegin = dtbegin.getYear() + "-" + dtbegin.getMonth() + "-" + dtbegin.getDayOfMonth();
+	        		    			   DatePicker dtend  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker2));
+	        		    			   String send = dtend.getYear() + "-" + dtend.getMonth() + "-" + dtend.getDayOfMonth();
+	        		    			   //gethistorybyname(strname,sbegin,send);
+	        		    			   
+	        		    			   }
+	        		    		   });
+	        		    	   builder.setNegativeButton("取消",null);
+	        		    	   builder.show();
+	        		       }
+	        		       else if(which == 2){
+	        		    	   showprop(mlistdata.get(1).get(idx-1).STCD);
+	        		       }
+	        		      }  
+	        		   }).show();  	        	
+	        	
+			return true;  
+	        }  
+	    });  		
+		    	
+    }
+    	
+	
     private void InitRealTime(){
         //刷新监听，此处实现真正刷新
     	//final int idxlist = i;
@@ -642,12 +783,24 @@ public class ActMain extends ActionBarActivity {
 			            		}       		    	   
 	        		       }else if (which == 1){
 	        		    	   LayoutInflater inflater = getLayoutInflater();
-	        		    	   View dialoglayout = inflater.inflate(R.layout.query, null);
+	        		    	   final View dialoglayout = inflater.inflate(R.layout.query, null);
 	        		    	   EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
 	        		    	   name.setText(mlistdata.get(0).get(idx-1).STNM);
 	        		    	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
 	        		    	   builder.setView(dialoglayout);
-	        		    	   builder.setPositiveButton("确定", null);
+	        		    	   builder.setPositiveButton("确定", new OnClickListener() {
+	        		    		   @Override
+	        		    		   public void onClick(DialogInterface dialog, int which) {
+	        		    			   stnmh = ((EditText)dialoglayout.findViewById(R.id.etname)).getText().toString();
+	        		    			   DatePicker dtbegin  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker1));
+	        		    			   sbegin = dtbegin.getYear() + "-" + dtbegin.getMonth() + "-" + dtbegin.getDayOfMonth();
+	        		    			   DatePicker dtend  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker2));
+	        		    			   send = dtend.getYear() + "-" + dtend.getMonth() + "-" + dtend.getDayOfMonth();
+	        		    			   //gethistorybyname(strname,sbegin,send);
+	        		    			   mPager.setCurrentItem(1);
+	        		    			   mhistoryView.refreshListener.onRefresh();
+	        		    			   }
+	        		    		   });
 	        		    	   builder.setNegativeButton("取消",null);
 	        		    	   builder.show();
 	        		       }
@@ -767,9 +920,9 @@ public class ActMain extends ActionBarActivity {
 	    });  		
 		    	
     }    
-        
-    private void showprop(String stcd){
-        HttpGet httpRequest = new HttpGet("http://test.gwgz.com/realtime.ashx?cmd=prop&stcd=" + stcd);
+    
+    private void gethistorybyname(String stcd,String sbegin, String send){
+        HttpGet httpRequest = new HttpGet("http://192.168.18.106/realtime.ashx?cmd=gethistorybyname&stnm=" + stcd + "&sbegin=" + sbegin + "&send=" + send);
         try{
            HttpClient httpClient = new DefaultHttpClient();
            HttpResponse httpResponse = httpClient.execute(httpRequest);
@@ -807,7 +960,64 @@ public class ActMain extends ActionBarActivity {
         }catch (IOException e) {
            e.printStackTrace();
         }
-    }
-    
-	
+    }    
+        
+    private void showprop(String _stcd){
+    	final String stcd = _stcd;
+    	
+		new AsyncTask<Object, Object, Object>() {
+			protected Object doInBackground(Object... params) {
+				HttpGet httpRequest = new HttpGet("http://192.168.18.106/realtime.ashx?cmd=prop&stcd=" + stcd);
+		         try{
+		            HttpClient httpClient = new DefaultHttpClient();
+		            HttpResponse httpResponse = httpClient.execute(httpRequest);
+		            if(httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+		            	HttpEntity res = httpResponse.getEntity();
+		            	InputStream is = res.getContent();
+		            	return inputStreamToString(is);
+		            } else{
+		                return null;
+		            }
+		         }catch(ClientProtocolException e){
+		        	 e.printStackTrace();
+		         }catch (IOException e) {
+		            e.printStackTrace();
+		         }catch(Exception e){
+		        	 e.printStackTrace();
+		         }
+		         return null;
+			}
+
+			@Override
+			protected void onPostExecute(Object result) {
+				super.onPostExecute(result);
+				try{
+		            //创建一个JSON对象
+		            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+		            int jsoncmd = jsonObject.getInt("cmdstatus");
+		            if(jsoncmd == 1){
+		            	JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+		            	for(int i = 0; i < jsonrows.length(); i++){
+		            		JSONArray jsonObject2 = (JSONArray)jsonrows.opt(i);
+		            		List<String> arl = new ArrayList<String>();
+		            		for(int j = 0; j < jsonObject2.length(); j++){
+		            			arl.add(jsonObject2.opt(j).toString().trim());
+		            		}
+		            		String [] strItems = (String [])arl.toArray(new String[arl.size()]);
+		 	        	   new AlertDialog.Builder(ActMain.this).setTitle("属性").setItems(strItems,new DialogInterface.OnClickListener(){  
+			        		      public void onClick(DialogInterface dialog, int which){  
+			        		       dialog.dismiss();  
+			        		      }  
+			        		   }).show(); 		            		
+		            		break;
+		            	}
+		            }
+		         }
+		         catch (JSONException e) {
+		            e.printStackTrace();
+		         }	
+			}
+		}.execute();    	
+   	}
+ 	
 }

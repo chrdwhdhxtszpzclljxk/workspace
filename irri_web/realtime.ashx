@@ -28,12 +28,40 @@ namespace irri
             {
                 OnCmdMy(c);
             }
+            else if (cmd == "gethistorybyname")
+            {
+                OnCmdGetHistoryName(c);
+            }
         }
 
         public bool IsReusable {
             get {
                 return false;
             }
+        }
+
+        public void OnCmdGetHistoryName(HttpContext c)
+        {
+            objresponse ret = new objresponse(); ret.cmdstatus = objresponse.LOGIN_FAIL;
+                try
+                {
+                    String stcd = c.Request["stnm"];
+                    String sbegin = c.Request["sbegin"];
+                    String send = c.Request["send"];
+                    if (stcd == "" || stcd == null) stcd = "10001001";
+                    if (sbegin == "" || sbegin == null) sbegin = DateTime.Now.ToString();
+                    if (send == "" || send == null) send = "2010-01-01";
+                    DBSQL d = new DBSQL();
+                    ret.rd = d.GetHistoryByName(stcd,sbegin,send);
+                    ret.cmdstatus = objresponse.CMD_SUCESS;
+                }
+                catch (Exception e)
+                {
+                    ret.cmdstatus = objresponse.LOGIN_DBERROR;
+                    c.Response.Write("err");
+                }
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            c.Response.Write(serializer.Serialize(ret));                     
         }
         
         public void OnCmdProp(HttpContext c)
