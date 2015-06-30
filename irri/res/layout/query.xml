@@ -8,24 +8,35 @@
 
     <EditText
         android:id="@+id/etname"
+        android:padding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="请输入测站名" >
+        android:hint="请输入站名或编号" >
 
         <requestFocus />
     </EditText>
+    
 
-    <DatePicker
-        android:id="@+id/datePicker1"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/tvend"
+        android:padding="12dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:calendarViewShown="false" />
+        android:text="Large Text"
+        android:clickable="true"
+        android:onClick="ondatebeginpickerclick"
+        android:textAppearance="?android:attr/textAppearanceLarge" />    
 
-    <DatePicker
-        android:id="@+id/datePicker2"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/tvbegin"
+        android:padding="12dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:calendarViewShown="false" />
+        android:clickable="true"
+        android:onClick="ondateendpickerclick"
+        android:text="Large Text"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
 
 </LinearLayout>

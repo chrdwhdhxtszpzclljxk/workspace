@@ -1,0 +1,47 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.easin.irri.ActMain" >
+            
+    <LinearLayout
+        android:id="@+id/tab"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <TextView 
+            android:id="@+id/textView1"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:background="#aaaaaa"
+            android:gravity="center"
+            android:text="数据"
+            android:textColor="#222222"
+            />
+        <TextView 
+            android:id="@+id/textView2"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:background="#999999"
+            android:gravity="center"
+            android:text="图表"
+            android:textColor="#222222"
+            />
+     
+    </LinearLayout>
+
+    <com.easin.irri.ChildViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/tab"
+        />
+
+</RelativeLayout>

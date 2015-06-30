@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.support.v7.app.ActionBarActivity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -72,13 +74,27 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.Legend.LegendPosition;
+import com.github.mikephil.charting.data.DataSet;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.filter.Approximator;
+import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.github.mikephil.charting.utils.ColorTemplate;
+import com.github.mikephil.charting.utils.Highlight;
+
 
 public class ActMain extends ActionBarActivity {
 	private String[] areas = new String[]{"加关注","查询","属性"};
 	private String[] areasmy = new String[]{"取消关注","查询","属性"};
 	private String stnmh,sbegin,send;
-	private ViewPager mPager;//页卡内容
-    private List<View> listViews; // Tab页面列表
+	private ViewPager mPager;
+	private ChildViewPager mPagerHis;//页卡内容
+    private List<View> listViews,listHis; // Tab页面列表
     //private ImageView cursor;// 动画图片
     //private TextView t1, t2, t3, t4;// 页卡头标
     private View t1,t2,t3,t4;
@@ -99,6 +115,11 @@ public class ActMain extends ActionBarActivity {
 
     private Map<String,String> msetup;
     private List<String> mmy;
+    
+    private TextView tvbegin, tvend,tvinfo; 
+    //private LineChart lcHistory;
+    //private View mHisData,mHisChart;
+    
     @Override
     protected void onPause(){
     	super.onPause();
@@ -172,18 +193,28 @@ public class ActMain extends ActionBarActivity {
     private void InitViewPager() {    // 初始化ViewPager
         mPager = (ViewPager) findViewById(R.id.viewPager);
         listViews = new ArrayList<View>();
+        listHis = new ArrayList<View>();
         LayoutInflater mInflater = getLayoutInflater();
         listViews.add(mInflater.inflate(R.layout.realtime, null));
-        listViews.add(mInflater.inflate(R.layout.history, null));
+        listViews.add(mInflater.inflate(R.layout.history_tab, null));
         listViews.add(mInflater.inflate(R.layout.my, null));
         listViews.add(mInflater.inflate(R.layout.about, null));
         mrealtime = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
         mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
-        mhistoryView = (MsgListView) listViews.get(1).findViewById(android.R.id.list);
-
+        //mHisData = mInflater.inflate(R.layout.history, null);
+        listHis.add(mInflater.inflate(R.layout.history, null));
+        listHis.add(mInflater.inflate(R.layout.history_chart, null));
+        mhistoryView = (MsgListView) listHis.get(0).findViewById(android.R.id.list);
+        tvinfo = (TextView)listHis.get(0).findViewById(R.id.tvinfo);
         mPager.setAdapter(new MyPagerAdapter(listViews));
         mPager.setCurrentItem(0);
         mPager.setOnPageChangeListener(new MyOnPageChangeListener());
+        
+        mPagerHis = (ChildViewPager)listViews.get(1).findViewById(R.id.viewPager);
+        mPagerHis.setAdapter(new MyPagerAdapter(listHis));
+        mPagerHis.setCurrentItem(0);
+        mPagerHis.setOnPageChangeListener(new MyOnPageChangeListener());
+
     }    
 
     private void InitTextView() {// 初始化头标
@@ -651,26 +682,7 @@ public class ActMain extends ActionBarActivity {
 			            			Collections.sort(mmy);
 			            		}       		    	   
 	        		       }else if (which == 1){
-	        		    	   LayoutInflater inflater = getLayoutInflater();
-	        		    	   final View dialoglayout = inflater.inflate(R.layout.query, null);
-	        		    	   EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
-	        		    	   name.setText(mlistdata.get(1).get(idx-1).STNM);
-	        		    	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
-	        		    	   builder.setView(dialoglayout);
-	        		    	   builder.setPositiveButton("确定", new OnClickListener() {
-	        		    		   @Override
-	        		    		   public void onClick(DialogInterface dialog, int which) {
-	        		    			   String strname = ((EditText)dialoglayout.findViewById(R.id.etname)).getText().toString();
-	        		    			   DatePicker dtbegin  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker1));
-	        		    			   String sbegin = dtbegin.getYear() + "-" + dtbegin.getMonth() + "-" + dtbegin.getDayOfMonth();
-	        		    			   DatePicker dtend  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker2));
-	        		    			   String send = dtend.getYear() + "-" + dtend.getMonth() + "-" + dtend.getDayOfMonth();
-	        		    			   //gethistorybyname(strname,sbegin,send);
-	        		    			   
-	        		    			   }
-	        		    		   });
-	        		    	   builder.setNegativeButton("取消",null);
-	        		    	   builder.show();
+	        		    	   showquery(dialog,which,idx,1);
 	        		       }
 	        		       else if(which == 2){
 	        		    	   showprop(mlistdata.get(1).get(idx-1).STCD);
@@ -782,27 +794,7 @@ public class ActMain extends ActionBarActivity {
 			            			Collections.sort(mmy);
 			            		}       		    	   
 	        		       }else if (which == 1){
-	        		    	   LayoutInflater inflater = getLayoutInflater();
-	        		    	   final View dialoglayout = inflater.inflate(R.layout.query, null);
-	        		    	   EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
-	        		    	   name.setText(mlistdata.get(0).get(idx-1).STNM);
-	        		    	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
-	        		    	   builder.setView(dialoglayout);
-	        		    	   builder.setPositiveButton("确定", new OnClickListener() {
-	        		    		   @Override
-	        		    		   public void onClick(DialogInterface dialog, int which) {
-	        		    			   stnmh = ((EditText)dialoglayout.findViewById(R.id.etname)).getText().toString();
-	        		    			   DatePicker dtbegin  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker1));
-	        		    			   sbegin = dtbegin.getYear() + "-" + dtbegin.getMonth() + "-" + dtbegin.getDayOfMonth();
-	        		    			   DatePicker dtend  = ((DatePicker)dialoglayout.findViewById(R.id.datePicker2));
-	        		    			   send = dtend.getYear() + "-" + dtend.getMonth() + "-" + dtend.getDayOfMonth();
-	        		    			   //gethistorybyname(strname,sbegin,send);
-	        		    			   mPager.setCurrentItem(1);
-	        		    			   mhistoryView.refreshListener.onRefresh();
-	        		    			   }
-	        		    		   });
-	        		    	   builder.setNegativeButton("取消",null);
-	        		    	   builder.show();
+	        		    	   showquery(dialog,which,idx,0);
 	        		       }
 	        		       else if(which == 2){
 	        		    	   showprop(mlistdata.get(0).get(idx-1).STCD);
@@ -962,6 +954,35 @@ public class ActMain extends ActionBarActivity {
         }
     }    
         
+    private void showquery(DialogInterface dialog, int which,int idx,int dataid){
+ 	   LayoutInflater inflater = getLayoutInflater();
+ 	   View dialoglayout = inflater.inflate(R.layout.query, null);
+ 	   final EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
+ 	   name.setText(mlistdata.get(dataid).get(idx-1).STNM);
+ 	   Calendar calendar=Calendar.getInstance();
+ 	   calendar.add(Calendar.MONTH, -1);
+       int year=calendar.get(Calendar.YEAR);
+       int monthOfYear=calendar.get(Calendar.MONTH) + 1;
+       int dayOfMonth=calendar.get(Calendar.DAY_OF_MONTH);	        		    	   
+       tvbegin  = ((TextView)dialoglayout.findViewById(R.id.tvbegin));
+       tvend  = ((TextView)dialoglayout.findViewById(R.id.tvend));
+       tvbegin.setText(year + "-" + monthOfYear + "-" + dayOfMonth);
+       calendar.add(Calendar.MONTH, 1);
+       tvend.setText(calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DAY_OF_MONTH));
+ 	   AlertDialog.Builder builder = new AlertDialog.Builder(ActMain.this);
+ 	   builder.setView(dialoglayout);
+ 	   builder.setPositiveButton("确定", new OnClickListener() {
+ 		   @Override
+ 		   public void onClick(DialogInterface dialog, int which) {
+			   stnmh = name.getText().toString();//((EditText)dialoglayout.findViewById(R.id.etname)).getText().toString();
+			   mPager.setCurrentItem(1);
+			   mhistoryView.refreshListener.onRefresh(); 
+			   tvinfo.setText(stnmh + sbegin + send);
+ 			   }
+ 		   });
+ 	   builder.setNegativeButton("取消",null);
+ 	   builder.show();    	
+    }
     private void showprop(String _stcd){
     	final String stcd = _stcd;
     	
@@ -1008,7 +1029,9 @@ public class ActMain extends ActionBarActivity {
 			        		      public void onClick(DialogInterface dialog, int which){  
 			        		       dialog.dismiss();  
 			        		      }  
-			        		   }).show(); 		            		
+			        		   })
+			        		   .setNegativeButton("确定", null)
+			        		   .show(); 		            		
 		            		break;
 		            	}
 		            }
@@ -1019,5 +1042,80 @@ public class ActMain extends ActionBarActivity {
 			}
 		}.execute();    	
    	}
+    
+    public void ondatebeginpickerclick(View v){ // 创建DatePickerDialog对象
+    	Calendar calendar=Calendar.getInstance();
+    	calendar.add(Calendar.DAY_OF_MONTH, -1);
+    	int year=calendar.get(Calendar.YEAR);
+    	int monthOfYear=calendar.get(Calendar.MONTH);
+    	int dayOfMonth=calendar.get(Calendar.DAY_OF_MONTH);	      	
+        DatePickerDialog dpd=new DatePickerDialog(ActMain.this,Datelistenerbegin,year,monthOfYear,dayOfMonth);
+        dpd.show();//显示DatePickerDialog组件    	
+    }
+    
+    public void ondateendpickerclick(View v){ // 创建DatePickerDialog对象
+    	Calendar calendar=Calendar.getInstance();
+    	calendar.add(Calendar.DAY_OF_MONTH, -1);
+    	int year=calendar.get(Calendar.YEAR);
+    	int monthOfYear=calendar.get(Calendar.MONTH);
+    	int dayOfMonth=calendar.get(Calendar.DAY_OF_MONTH);	      	
+        DatePickerDialog dpd=new DatePickerDialog(ActMain.this,Datelistenerend,year,monthOfYear,dayOfMonth);
+        dpd.show();//显示DatePickerDialog组件    	
+    }    
+    
+    private DatePickerDialog.OnDateSetListener Datelistenerbegin=new DatePickerDialog.OnDateSetListener() {
+        /**params：view：该事件关联的组件
+         * params：myyear：当前选择的年
+         * params：monthOfYear：当前选择的月
+         * params：dayOfMonth：当前选择的日
+         */
+        @Override
+        public void onDateSet(DatePicker view, int myyear, int monthOfYear,int dayOfMonth) {
+       		sbegin = myyear + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
+       		tvbegin.setText(sbegin);
+            //修改year、month、day的变量值，以便以后单击按钮时，DatePickerDialog上显示上一次修改后的值
+            //year=myyear;
+            //month=monthOfYear;
+            //day=dayOfMonth;
+            //更新日期
+        	
+            updateDate();
+            
+        }
+        //当DatePickerDialog关闭时，更新日期显示
+        private void updateDate() { // 在TextView上显示日期
+            //showdate.setText("当前日期："+year+"-"+(month+1)+"-"+day);
+        	
+     	
+        }
+    };    
  	
+
+    private DatePickerDialog.OnDateSetListener Datelistenerend=new DatePickerDialog.OnDateSetListener() {
+        /**params：view：该事件关联的组件
+         * params：myyear：当前选择的年
+         * params：monthOfYear：当前选择的月
+         * params：dayOfMonth：当前选择的日
+         */
+        @Override
+        public void onDateSet(DatePicker view, int myyear, int monthOfYear,int dayOfMonth) {
+       		send = myyear + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
+       		tvend.setText(send);
+            //修改year、month、day的变量值，以便以后单击按钮时，DatePickerDialog上显示上一次修改后的值
+            //year=myyear;
+            //month=monthOfYear;
+            //day=dayOfMonth;
+            //更新日期
+        	
+            updateDate();
+            
+        }
+        //当DatePickerDialog关闭时，更新日期显示
+        private void updateDate() { // 在TextView上显示日期
+            //showdate.setText("当前日期："+year+"-"+(month+1)+"-"+day);
+        	
+     	
+        }
+    };        
+    
 }

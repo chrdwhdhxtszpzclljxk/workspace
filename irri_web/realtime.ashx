@@ -49,8 +49,8 @@ namespace irri
                     String sbegin = c.Request["sbegin"];
                     String send = c.Request["send"];
                     if (stcd == "" || stcd == null) stcd = "10001001";
-                    if (sbegin == "" || sbegin == null) sbegin = DateTime.Now.ToString();
-                    if (send == "" || send == null) send = "2010-01-01";
+                    if (send == "" || send == null) send = DateTime.Now.ToString();
+                    if (sbegin == "" || sbegin == null) sbegin = "2010-01-01";
                     DBSQL d = new DBSQL();
                     ret.rd = d.GetHistoryByName(stcd,sbegin,send);
                     ret.cmdstatus = objresponse.CMD_SUCESS;
