@@ -150,7 +150,9 @@ public class RealTimeFragment extends Fragment {
                         super.onPostExecute(result);
                         try {
                             //创建一个JSON对象
-                            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+                            String jsonstr = result.toString();
+                            if(jsonstr.isEmpty()) return;
+                            JSONObject jsonObject = new JSONObject(jsonstr);//.getJSONObject("parent");
                             int jsoncmd = jsonObject.getInt("cmdstatus");
                             if (jsoncmd == 1) {
                                 JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");

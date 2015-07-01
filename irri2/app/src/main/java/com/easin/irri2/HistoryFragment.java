@@ -173,7 +173,7 @@ public class HistoryFragment extends Fragment implements
                                 InputStream is = res.getContent();
                                 return ActMain.inputStreamToString(is);
                             } else {
-                                return null;
+                                return "";
                             }
                         } catch (ClientProtocolException e) {
                             e.printStackTrace();
@@ -182,7 +182,7 @@ public class HistoryFragment extends Fragment implements
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        return null;
+                        return "";
                     }
 
                     @Override
@@ -190,7 +190,9 @@ public class HistoryFragment extends Fragment implements
                         super.onPostExecute(result);
                         try {
                             //创建一个JSON对象
-                            JSONObject jsonObject = new JSONObject(result.toString());//.getJSONObject("parent");
+                            String jsonstr = result.toString();
+                            if(jsonstr.isEmpty()) return;
+                            JSONObject jsonObject = new JSONObject(jsonstr);//.getJSONObject("parent");
                             int jsoncmd = jsonObject.getInt("cmdstatus");
                             if (jsoncmd == 1) {
                                 JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");

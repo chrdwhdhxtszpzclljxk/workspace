@@ -20,7 +20,7 @@ public class FragmentFactory {
                 fragment = com.easin.irri2.HistoryFragment.newInstance("hello","abc",_actmain);
                 break;
             case R.id.rb_mylist:
-                fragment = new MyListFragment();
+                fragment = com.easin.irri2.MyFragment.newInstance("hello","abc",_actmain);
                 break;
             case R.id.rb_global:
                 fragment = new GlobalFragment();
