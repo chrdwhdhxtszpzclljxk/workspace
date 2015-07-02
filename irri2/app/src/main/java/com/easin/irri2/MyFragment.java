@@ -108,10 +108,20 @@ public class MyFragment extends Fragment {
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpPost httpRequest = new HttpPost("http://192.168.18.106/realtime.ashx");
+                        HttpPost httpRequest = new HttpPost(mactmain.serverurl);
                         List<NameValuePair> cmdlist = new ArrayList<NameValuePair>();
-                        NameValuePair cmd = new BasicNameValuePair("cmd", "realtime");
+                        NameValuePair cmd = new BasicNameValuePair("cmd", "my");
                         cmdlist.add(cmd);
+                        StringBuilder sb = new StringBuilder();
+                        for(String stcd : mactmain.mmy){
+                            sb.append(stcd).append(",");
+                        }
+                        if(sb.length() > 0){
+                            sb.append("0");
+                            NameValuePair stcds = new BasicNameValuePair("stcds", sb.toString());
+                            cmdlist.add(stcds);
+                        }
+
                         try {
                             HttpEntity httpEntity = new UrlEncodedFormEntity(cmdlist);
                             httpRequest.setEntity(httpEntity);
@@ -145,7 +155,6 @@ public class MyFragment extends Fragment {
                     protected void onPostExecute(Object result) {
                         super.onPostExecute(result);
                         try {
-                            //创建一个JSON对象
                             String jsonstr = result.toString();
                             if(jsonstr.isEmpty()) return;
                             JSONObject jsonObject = new JSONObject(jsonstr);//.getJSONObject("parent");
@@ -184,16 +193,13 @@ public class MyFragment extends Fragment {
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position,
                                            long id) {
                 final int idx = position;
-                new AlertDialog.Builder(getActivity()).setTitle(mdata.get(position - 1).STNM).setItems(ActMain.areas, new DialogInterface.OnClickListener() {
+                new AlertDialog.Builder(getActivity()).setTitle(mdata.get(position - 1).STNM).setItems(ActMain.areasmy, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         if (which == 0) {
-
-                            int idx1 = Collections.binarySearch(ActMain.mmy, mdata.get(idx - 1).STCD);
-                            if (idx1 < 0) {
-                                ActMain.mmy.add(mdata.get(idx - 1).STCD);
-                                Collections.sort(ActMain.mmy);
-                            }
+                            mactmain.mmy.remove(mdata.get(idx-1).STCD);
+                            mview.refreshListener.onRefresh();
+                            mdata.remove(idx-1);
                         } else if (which == 1) {
                             mactmain.showquery(dialog, which, idx, mdata);
                         } else if (which == 2) {

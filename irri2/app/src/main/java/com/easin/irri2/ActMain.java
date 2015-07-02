@@ -53,11 +53,19 @@ import java.util.Vector;
 // 主界面
 public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListener {
     static public String[] areas = new String[]{"加关注","查询","属性"};
-    //private String[] areasmy = new String[]{"取消关注","查询","属性"};
+    static public String[] areasmy = new String[]{"取消关注","查询","属性"};
+    static public String serverurl = "http://test.gwgz.com/realtime.ashx";
     private FragmentManager fragmentManager;
     static public List<String> mmy;
     public String sbegin,send,stnmh;
     public TextView tvbegin,tvend;
+    @Override
+    protected void onPause(){
+        super.onPause();
+        //put(msetup);
+        mmyput(mmy);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,7 +127,7 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         new AsyncTask<Object, Object, Object>() {
             protected Object doInBackground(Object... params) {
                 String stcd = params[0].toString();
-                HttpGet httpRequest = new HttpGet("http://192.168.18.106/realtime.ashx?cmd=prop&stcd=" + stcd);
+                HttpGet httpRequest = new HttpGet(serverurl+"?cmd=prop&stcd=" + stcd);
                 try{
                     HttpClient httpClient = new DefaultHttpClient();
                     HttpResponse httpResponse = httpClient.execute(httpRequest);

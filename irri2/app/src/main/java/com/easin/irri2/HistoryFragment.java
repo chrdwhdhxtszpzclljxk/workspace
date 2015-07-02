@@ -164,7 +164,7 @@ public class HistoryFragment extends Fragment implements
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpGet httpRequest = new HttpGet("http://192.168.18.106/realtime.ashx?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
+                        HttpGet httpRequest = new HttpGet(mactmain.serverurl+"?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
                         try {
                             HttpClient httpClient = new DefaultHttpClient();
                             HttpResponse httpResponse = httpClient.execute(httpRequest);
@@ -196,6 +196,7 @@ public class HistoryFragment extends Fragment implements
                             int jsoncmd = jsonObject.getInt("cmdstatus");
                             if (jsoncmd == 1) {
                                 JSONArray jsonrows = jsonObject.getJSONObject("rd").getJSONArray("rows");
+                                mdata.clear();
                                 for (int i = 0; i < jsonrows.length(); i++) {
                                     JSONArray jsonObject2 = (JSONArray) jsonrows.opt(i);
                                     STCDINFO info = new STCDINFO();
@@ -205,13 +206,13 @@ public class HistoryFragment extends Fragment implements
                                     info.Z = jsonObject2.getString(3).trim();
                                     info.Q = jsonObject2.getString(4).trim();
                                     info.GTOPHGT = jsonObject2.getString(5).trim();
-                                    int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
-                                    if (idx < 0) {
+                                    //int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
+                                    //if (idx < 0) {
                                         mdata.add(info);
                                         Collections.sort(mdata, new STCDINFO_CMP());
-                                    } else if (idx < mdata.size()) {
-                                        mdata.set(idx, info);
-                                    }
+                                    //} else if (idx < mdata.size()) {
+                                    //    mdata.set(idx, info);
+                                   // }
                                     setData(50, 200);
                                 }
                             }
@@ -543,7 +544,7 @@ public class HistoryFragment extends Fragment implements
         set1.enableDashedLine(10f, 5f, 0f);
         set1.setColor(Color.BLACK);
         set1.setCircleColor(Color.BLACK);
-        set1.setLineWidth(1f);
+        set1.setLineWidth(2f);
         set1.setCircleSize(3f);
         set1.setDrawCircleHole(false);
         set1.setValueTextSize(9f);

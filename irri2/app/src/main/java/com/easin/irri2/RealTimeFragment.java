@@ -112,7 +112,7 @@ public class RealTimeFragment extends Fragment {
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpPost httpRequest = new HttpPost("http://192.168.18.106/realtime.ashx");
+                        HttpPost httpRequest = new HttpPost(mactmain.serverurl);
                         List<NameValuePair> cmdlist = new ArrayList<NameValuePair>();
                         NameValuePair cmd = new BasicNameValuePair("cmd", "realtime");
                         cmdlist.add(cmd);
