@@ -59,6 +59,8 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
     static public List<String> mmy;
     public String sbegin,send,stnmh;
     public TextView tvbegin,tvend;
+    static public MsgListView mviewHis;
+
     @Override
     protected void onPause(){
         super.onPause();
@@ -69,12 +71,13 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity);
         mmy = mmyget();
         fragmentManager = getFragmentManager();
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.rg_tab);
         radioGroup.setOnCheckedChangeListener(this);
+        mviewHis = null;
         findViewById(R.id.rb_realtime).performClick();
     }
 
@@ -87,12 +90,15 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         transaction.commit();
     }
 
+    public void bnHisQueryClick(View v){
+        showquery(null, 0, -1, null);
+    }
 
     public void showquery(DialogInterface dialog, int which,int idx,Vector<STCDINFO> _data){
         LayoutInflater inflater = getLayoutInflater();
         View dialoglayout = inflater.inflate(R.layout.query, null);
         final EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
-        name.setText(_data.get(idx - 1).STNM);
+        if(idx > 0)  name.setText(_data.get(idx - 1).STNM);
         Calendar calendar=Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
         int year=calendar.get(Calendar.YEAR);
@@ -114,6 +120,10 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
                 //mPager.setCurrentItem(1);
                 //mhistoryView.refreshListener.onRefresh();
                 //tvinfo.setText(stnmh + sbegin + send);
+                if(mviewHis != null){
+                    mviewHis.OnAutoRefresh();
+                    mviewHis.refreshListener.onRefresh();
+                }
                 findViewById(R.id.rb_histroy).performClick();
             }
         });
@@ -122,8 +132,6 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
     }
 
     public void showprop(String _stcd){
-
-
         new AsyncTask<Object, Object, Object>() {
             protected Object doInBackground(Object... params) {
                 String stcd = params[0].toString();

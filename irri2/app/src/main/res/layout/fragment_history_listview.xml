@@ -1,6 +1,14 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="com.easin.irri2.RealTimeFragment">
+
+    android:layout_height="match_parent" tools:context="com.easin.irri2.RealTimeFragment"
+    android:orientation="vertical">
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="设置查询条件"
+        android:id="@+id/bnHisQuery"
+        android:onClick="bnHisQueryClick" />
 
     <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -31,6 +39,9 @@
             <LinearLayout android:id="@android:id/empty"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent" >
+
+
+
                 <include
                     android:id="@android:id/empty"
                     layout="@layout/empty_loading"
@@ -40,4 +51,4 @@
         </LinearLayout>
     </RelativeLayout>
 
-</FrameLayout>
+</LinearLayout>

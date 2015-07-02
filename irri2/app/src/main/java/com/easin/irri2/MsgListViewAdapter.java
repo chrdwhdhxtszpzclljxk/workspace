@@ -75,9 +75,9 @@ public class MsgListViewAdapter  extends BaseAdapter {
         convertView.setBackgroundColor(colors[colorPos]);
         title.setText(mdata.get(position).STNM);//("Hello");//
         text.setText(mdata.get(position).TM);//("2015-06-21");//
-        tvz.setText("水位：" + mdata.get(position).Z);
-        tvq.setText("流量：" + mdata.get(position).Q);
-        tvgtophgt.setText("并度：" + mdata.get(position).GTOPHGT);
+        tvz.setText("水位(m)：" + mdata.get(position).Z);
+        tvq.setText("流量(m3/s)：" + mdata.get(position).Q);
+        tvgtophgt.setText("开度(m)：" + mdata.get(position).GTOPHGT);
         //iamge.setImageResource(R.drawable.jay);
         return convertView;
     }

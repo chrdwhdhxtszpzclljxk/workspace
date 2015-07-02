@@ -47,6 +47,7 @@ import java.util.Vector;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendPosition;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -97,7 +98,7 @@ public class HistoryFragment extends Fragment implements
     private ViewPager mPager;
     private List<View> listViews;
 
-    private LineChart mChart;
+    private LineChart mChartZ,mChartQ,mChartG;
 
     private MsgListView mview;
     private MsgListViewAdapter madp;
@@ -152,8 +153,12 @@ public class HistoryFragment extends Fragment implements
         listViews = new ArrayList<View>();
         listViews.add(inflater.inflate(R.layout.fragment_history_listview, null));
         listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
+        listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
+        listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
         mview = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
-        mChart = (LineChart) listViews.get(1).findViewById(R.id.chart1);
+        mChartZ = (LineChart) listViews.get(1).findViewById(R.id.chart1);
+        mChartQ = (LineChart) listViews.get(2).findViewById(R.id.chart1);
+        mChartG = (LineChart) listViews.get(3).findViewById(R.id.chart1);
         //mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
         mdata = new Vector<STCDINFO>();
         mview.setItemsCanFocus(false);
@@ -164,7 +169,7 @@ public class HistoryFragment extends Fragment implements
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpGet httpRequest = new HttpGet(mactmain.serverurl+"?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
+                        HttpGet httpRequest = new HttpGet(mactmain.serverurl + "?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
                         try {
                             HttpClient httpClient = new DefaultHttpClient();
                             HttpResponse httpResponse = httpClient.execute(httpRequest);
@@ -191,7 +196,7 @@ public class HistoryFragment extends Fragment implements
                         try {
                             //创建一个JSON对象
                             String jsonstr = result.toString();
-                            if(jsonstr.isEmpty()) return;
+                            if (jsonstr.isEmpty()) return;
                             JSONObject jsonObject = new JSONObject(jsonstr);//.getJSONObject("parent");
                             int jsoncmd = jsonObject.getInt("cmdstatus");
                             if (jsoncmd == 1) {
@@ -208,11 +213,11 @@ public class HistoryFragment extends Fragment implements
                                     info.GTOPHGT = jsonObject2.getString(5).trim();
                                     //int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
                                     //if (idx < 0) {
-                                        mdata.add(info);
-                                        Collections.sort(mdata, new STCDINFO_CMP());
+                                    mdata.add(info);
+                                    Collections.sort(mdata, new STCDINFO_CMP());
                                     //} else if (idx < mdata.size()) {
                                     //    mdata.set(idx, info);
-                                   // }
+                                    // }
                                     setData(50, 200);
                                 }
                             }
@@ -251,106 +256,116 @@ public class HistoryFragment extends Fragment implements
             }
         });
 
+        mview.setcanrefresh(false);
         mview.OnAutoRefresh();
         mview.refreshListener.onRefresh();
 
         mPager.setAdapter(new MyPagerAdapter(listViews));
         mPager.setCurrentItem(0);
         mPager.setOnPageChangeListener(new MyOnPageChangeListener());
+        {
+            mChartZ.setOnChartGestureListener(this);
+            mChartZ.setOnChartValueSelectedListener(this);
+            mChartZ.setDrawGridBackground(false);
+            mChartZ.setDrawBorders(true);
+            mChartZ.setDescription("");
+            mChartZ.setNoDataTextDescription("You need to provide data for the chart.");
+            mChartZ.setHighlightEnabled(true);
+            mChartZ.setTouchEnabled(true);
+            mChartZ.setDragEnabled(true);
+            mChartZ.setScaleEnabled(true);
+            mChartZ.setPinchZoom(true);
+            MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
+            mChartZ.setMarkerView(mv);
+            mChartZ.setHighlightEnabled(false);
+            YAxis leftAxis = mChartZ.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(220f);
+            leftAxis.setAxisMinValue(-50f);
+            leftAxis.setStartAtZero(false);
+            leftAxis.enableGridDashedLine(10f, 10f, 0f);
+            leftAxis.setDrawLimitLinesBehindData(true);
+            mChartZ.getAxisRight().setEnabled(false);
+            mChartZ.animateX(2500, Easing.EasingOption.EaseInOutQuart);
+            mChartZ.invalidate();
+            mChartZ.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+            // get the legend (only possible after setting data)
+            Legend l = mChartZ.getLegend();
+            // modify the legend ...
+            // l.setPosition(LegendPosition.LEFT_OF_CHART);
+            l.setForm(LegendForm.LINE);
+        }
 
-        mChart.setOnChartGestureListener(this);
-        mChart.setOnChartValueSelectedListener(this);
-        mChart.setDrawGridBackground(false);
-        // no description text
-        mChart.setDescription("");
-        mChart.setNoDataTextDescription("You need to provide data for the chart.");
+        {
+            mChartQ.setOnChartGestureListener(this);
+            mChartQ.setOnChartValueSelectedListener(this);
+            mChartQ.setDrawGridBackground(false);
+            mChartQ.setDrawBorders(true);
+            mChartQ.setDescription("");
+            mChartQ.setNoDataTextDescription("You need to provide data for the chart.");
+            mChartQ.setHighlightEnabled(true);
+            mChartQ.setTouchEnabled(true);
+            mChartQ.setDragEnabled(true);
+            mChartQ.setScaleEnabled(true);
+            mChartQ.setPinchZoom(true);
+            MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
+            mChartQ.setMarkerView(mv);
+            mChartQ.setHighlightEnabled(false);
+            YAxis leftAxis = mChartQ.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(220f);
+            leftAxis.setAxisMinValue(-50f);
+            leftAxis.setStartAtZero(false);
+            leftAxis.enableGridDashedLine(10f, 10f, 0f);
+            leftAxis.setDrawLimitLinesBehindData(true);
+            mChartQ.getAxisRight().setEnabled(false);
+            mChartQ.animateX(2500, Easing.EasingOption.EaseInOutQuart);
+            mChartQ.invalidate();
+            mChartQ.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+            // get the legend (only possible after setting data)
+            Legend l = mChartQ.getLegend();
+            // modify the legend ...
+            // l.setPosition(LegendPosition.LEFT_OF_CHART);
+            l.setForm(LegendForm.LINE);
+        }
+        {
+            mChartG.setOnChartGestureListener(this);
+            mChartG.setOnChartValueSelectedListener(this);
+            mChartG.setDrawGridBackground(false);
+            mChartG.setDrawBorders(true);
+            mChartG.setDescription("");
+            mChartG.setNoDataTextDescription("You need to provide data for the chart.");
+            mChartG.setHighlightEnabled(true);
+            mChartG.setTouchEnabled(true);
+            mChartG.setDragEnabled(true);
+            mChartG.setScaleEnabled(true);
+            mChartG.setPinchZoom(true);
+            MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
+            mChartG.setMarkerView(mv);
+            mChartG.setHighlightEnabled(false);
+            YAxis leftAxis = mChartG.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(220f);
+            leftAxis.setAxisMinValue(-50f);
+            leftAxis.setStartAtZero(false);
+            leftAxis.enableGridDashedLine(10f, 10f, 0f);
+            leftAxis.setDrawLimitLinesBehindData(true);
+            mChartG.getAxisRight().setEnabled(false);
 
-        // enable value highlighting
-        mChart.setHighlightEnabled(true);
-
-        // enable touch gestures
-        mChart.setTouchEnabled(true);
-
-        // enable scaling and dragging
-        mChart.setDragEnabled(true);
-        mChart.setScaleEnabled(true);
-        // mChart.setScaleXEnabled(true);
-        // mChart.setScaleYEnabled(true);
-
-        // if disabled, scaling can be done on x- and y-axis separately
-        mChart.setPinchZoom(true);
-
-        // set an alternative background color
-        // mChart.setBackgroundColor(Color.GRAY);
-
-        // create a custom MarkerView (extend MarkerView) and specify the layout
-        // to use for it
-        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
-
-        // set the marker to the chart
-        mChart.setMarkerView(mv);
-
-        // enable/disable highlight indicators (the lines that indicate the
-        // highlighted Entry)
-        mChart.setHighlightEnabled(false);
-
-        // x-axis limit line
-//        LimitLine llXAxis = new LimitLine(10f, "Index 10");
-//        llXAxis.setLineWidth(4f);
-//        llXAxis.enableDashedLine(10f, 10f, 0f);
-//        llXAxis.setLabelPosition(LimitLabelPosition.POS_RIGHT);
-//        llXAxis.setTextSize(10f);
-//
-//        XAxis xAxis = mChart.getXAxis();
-//        xAxis.addLimitLine(llXAxis);
-
-        LimitLine ll1 = new LimitLine(130f, "Upper Limit");
-        ll1.setLineWidth(4f);
-        ll1.enableDashedLine(10f, 10f, 0f);
-        ll1.setLabelPosition(LimitLabelPosition.POS_RIGHT);
-        ll1.setTextSize(10f);
-
-        LimitLine ll2 = new LimitLine(-30f, "Lower Limit");
-        ll2.setLineWidth(4f);
-        ll2.enableDashedLine(10f, 10f, 0f);
-        ll2.setLabelPosition(LimitLabelPosition.POS_RIGHT);
-        ll2.setTextSize(10f);
-
-        YAxis leftAxis = mChart.getAxisLeft();
-        leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
-        //leftAxis.addLimitLine(ll1);
-        //leftAxis.addLimitLine(ll2);
-        leftAxis.setAxisMaxValue(220f);
-        leftAxis.setAxisMinValue(-50f);
-        leftAxis.setStartAtZero(false);
-        //leftAxis.setYOffset(20f);
-        leftAxis.enableGridDashedLine(10f, 10f, 0f);
-
-        // limit lines are drawn behind data (and not on top)
-        leftAxis.setDrawLimitLinesBehindData(true);
-
-        mChart.getAxisRight().setEnabled(false);
-
-        // add data
+            mChartG.animateX(2500, Easing.EasingOption.EaseInOutQuart);
+            mChartG.invalidate();
+            mChartG.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+            // get the legend (only possible after setting data)
+            Legend l = mChartG.getLegend();
+            // modify the legend ...
+            // l.setPosition(LegendPosition.LEFT_OF_CHART);
+            l.setForm(LegendForm.LINE);
+        }
         setData(45, 100);
-
-//        mChart.setVisibleXRange(20);
-//        mChart.setVisibleYRange(20f, AxisDependency.LEFT);
-//        mChart.centerViewTo(20, 50, AxisDependency.LEFT);
-
-        mChart.animateX(2500, Easing.EasingOption.EaseInOutQuart);
-//        mChart.invalidate();
-
-        // get the legend (only possible after setting data)
-        Legend l = mChart.getLegend();
-
-        // modify the legend ...
-        // l.setPosition(LegendPosition.LEFT_OF_CHART);
-        l.setForm(LegendForm.LINE);
-
-
+        mactmain.mviewHis = mview;
         return v;
     }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -362,6 +377,7 @@ public class HistoryFragment extends Fragment implements
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
         try {
             //mListener = (OnFragmentInteractionListener) activity;
         } catch (ClassCastException e) {
@@ -374,6 +390,7 @@ public class HistoryFragment extends Fragment implements
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mactmain.mviewHis = null;
     }
 
     /**
@@ -515,43 +532,60 @@ public class HistoryFragment extends Fragment implements
 
     public void setData(int count, float range) {
         ArrayList<String> xVals = new ArrayList<String>();
-        ArrayList<Entry> yVals = new ArrayList<Entry>();
-        ArrayList<Entry> yVals2 = new ArrayList<Entry>();
+        ArrayList<Entry> yValsQ = new ArrayList<Entry>();
+        ArrayList<Entry> yValsZ = new ArrayList<Entry>();
+        ArrayList<Entry> yValsG = new ArrayList<Entry>();
         count = mdata.size();
         int i = 0;
-        float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f;
+        float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
             xVals.add(info.TM);
             fval = Float.parseFloat(info.Q);
-            if(fmin > fval) fmin = fval;
-            if(fmax < fval) fmax = fval;
-            yVals.add(new Entry(fval,i));
+            if(fminq > fval) fminq = fval;
+            if(fmaxq < fval) fmaxq = fval;
+            yValsQ.add(new Entry(fval,i));
             fval = Float.parseFloat(info.Z);
-            if(fmin > fval) fmin = fval;
-            if(fmax < fval) fmax = fval;
-            yVals2.add(new Entry(fval, i));
+            if(fminz > fval) fminz = fval;
+            if(fmaxz < fval) fmaxz = fval;
+            yValsZ.add(new Entry(fval, i));
+            fval = Float.parseFloat(info.GTOPHGT);
+            if(fming > fval) fming = fval;
+            if(fmaxg < fval) fmaxg = fval;
+            yValsG.add(new Entry(fval, i));
             i++;
         }
+        {
+            YAxis leftAxis = mChartZ.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(fmaxz * 1.1f);
+            leftAxis.setAxisMinValue(fminz * 0.9f);
+        }
+        {
+            YAxis leftAxis = mChartQ.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(fmaxq * 1.1f);
+            leftAxis.setAxisMinValue(fminq * 0.9f);
+        }
+        {
+            YAxis leftAxis = mChartG.getAxisLeft();
+            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+            leftAxis.setAxisMaxValue(fmaxg * 1.1f);
+            leftAxis.setAxisMinValue(fming * 0.9f);
+        }
 
-        YAxis leftAxis = mChart.getAxisLeft();
-        leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
-        //leftAxis.addLimitLine(ll1);
-        //leftAxis.addLimitLine(ll2);
-        leftAxis.setAxisMaxValue(fmax * 1.1f);
-        leftAxis.setAxisMinValue(fmin * 0.9f);
-
-        LineDataSet set1 = new LineDataSet(yVals, "流量");
-        set1.enableDashedLine(10f, 5f, 0f);
-        set1.setColor(Color.BLACK);
-        set1.setCircleColor(Color.BLACK);
+        LineDataSet set1 = new LineDataSet(yValsQ, "流量");
+        //set1.enableDashedLine(10f, 5f, 0f);
+        set1.setColor(Color.RED);
+        set1.setCircleColor(Color.WHITE);
         set1.setLineWidth(2f);
         set1.setCircleSize(3f);
         set1.setDrawCircleHole(false);
         set1.setValueTextSize(9f);
         set1.setFillAlpha(65);
+        set1.setDrawCubic(true);
         set1.setFillColor(Color.BLACK);
 
-        LineDataSet set2 = new LineDataSet(yVals2, "水位");
+        LineDataSet set2 = new LineDataSet(yValsZ, "水位");
         set2.setAxisDependency(YAxis.AxisDependency.RIGHT);
         set2.setColor(Color.RED);
         set2.setCircleColor(Color.WHITE);
@@ -560,19 +594,59 @@ public class HistoryFragment extends Fragment implements
         set2.setFillAlpha(65);
         set2.setFillColor(Color.RED);
         set2.setDrawCircleHole(false);
+        set2.setDrawCubic(true);
         set2.setHighLightColor(Color.rgb(244, 117, 117));
 
-        ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
-        dataSets.add(set2);
-        dataSets.add(set1); // add the datasets
+        LineDataSet setG = new LineDataSet(yValsG, "开度");
+        setG.setAxisDependency(YAxis.AxisDependency.RIGHT);
+        setG.setColor(Color.RED);
+        setG.setCircleColor(Color.WHITE);
+        setG.setLineWidth(2f);
+        setG.setCircleSize(3f);
+        setG.setFillAlpha(65);
+        setG.setFillColor(Color.RED);
+        setG.setDrawCircleHole(false);
+        setG.setDrawCubic(true);
+        setG.setHighLightColor(Color.rgb(244, 117, 117));
 
-        // create a data object with the datasets
-        LineData data = new LineData(xVals, dataSets);
-        data.setValueTextColor(Color.WHITE);
-        data.setValueTextSize(9f);
+        {
+            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            dataSets.add(set2);
 
-        // set data
-        mChart.setData(data);
+            // create a data object with the datasets
+            LineData data = new LineData(xVals, dataSets);
+            data.setValueTextColor(Color.WHITE);
+            data.setValueTextSize(12f);
+
+            // set data
+            mChartZ.setData(data);
+        }
+
+        {
+            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            dataSets.add(set1);
+
+            // create a data object with the datasets
+            LineData data = new LineData(xVals, dataSets);
+            data.setValueTextColor(Color.WHITE);
+            data.setValueTextSize(12f);
+
+            // set data
+            mChartQ.setData(data);
+        }
+
+        {
+            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            dataSets.add(setG);
+
+            // create a data object with the datasets
+            LineData data = new LineData(xVals, dataSets);
+            data.setValueTextColor(Color.WHITE);
+            data.setValueTextSize(12f);
+
+            // set data
+            mChartG.setData(data);
+        }
     }
 
     @Override
@@ -607,8 +681,8 @@ public class HistoryFragment extends Fragment implements
 
     @Override
     public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-        Log.i("Entry selected", e.toString());
-        Log.i("", "low: " + mChart.getLowestVisibleXIndex() + ", high: " + mChart.getHighestVisibleXIndex());
+        //Log.i("Entry selected", e.toString());
+       // Log.i("", "low: " + mChart.getLowestVisibleXIndex() + ", high: " + mChart.getHighestVisibleXIndex());
     }
 
     @Override
