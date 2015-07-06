@@ -30,4 +30,5 @@ repositories {
 
 dependencies {
     compile 'com.github.PhilJay:MPAndroidChart:v2.1.0'
+    compile 'com.github.lecho:hellocharts-android:v1.5.5'
 }

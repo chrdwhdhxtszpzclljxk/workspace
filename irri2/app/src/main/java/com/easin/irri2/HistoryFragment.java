@@ -98,7 +98,7 @@ public class HistoryFragment extends Fragment implements
     private ViewPager mPager;
     private List<View> listViews;
 
-    private LineChart mChartZ,mChartQ,mChartG;
+    private LineChart mChartZ,mChartQ;//,mChartG;
 
     private MsgListView mview;
     private MsgListViewAdapter madp;
@@ -154,11 +154,11 @@ public class HistoryFragment extends Fragment implements
         listViews.add(inflater.inflate(R.layout.fragment_history_listview, null));
         listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
         listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
-        listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
+        //listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
         mview = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
         mChartZ = (LineChart) listViews.get(1).findViewById(R.id.chart1);
         mChartQ = (LineChart) listViews.get(2).findViewById(R.id.chart1);
-        mChartG = (LineChart) listViews.get(3).findViewById(R.id.chart1);
+        //mChartG = (LineChart) listViews.get(3).findViewById(R.id.chart1);
         //mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
         mdata = new Vector<STCDINFO>();
         mview.setItemsCanFocus(false);
@@ -267,7 +267,7 @@ public class HistoryFragment extends Fragment implements
             mChartZ.setOnChartGestureListener(this);
             mChartZ.setOnChartValueSelectedListener(this);
             mChartZ.setDrawGridBackground(false);
-            mChartZ.setDrawBorders(true);
+            //mChartZ.setDrawBorders(true);
             mChartZ.setDescription("");
             mChartZ.setNoDataTextDescription("You need to provide data for the chart.");
             mChartZ.setHighlightEnabled(true);
@@ -285,10 +285,18 @@ public class HistoryFragment extends Fragment implements
             leftAxis.setStartAtZero(false);
             leftAxis.enableGridDashedLine(10f, 10f, 0f);
             leftAxis.setDrawLimitLinesBehindData(true);
+            leftAxis.setTextSize(12);
+            leftAxis.setTextColor(Color.WHITE);
+            leftAxis.setDrawGridLines(true);
             mChartZ.getAxisRight().setEnabled(false);
             mChartZ.animateX(2500, Easing.EasingOption.EaseInOutQuart);
+
+            XAxis xAxis = mChartZ.getXAxis();
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+            xAxis.setTextColor(Color.WHITE);
+            xAxis.setTextSize(8);
+           // xAxis.setLabelsToSkip(2);
             mChartZ.invalidate();
-            mChartZ.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
             // get the legend (only possible after setting data)
             Legend l = mChartZ.getLegend();
             // modify the legend ...
@@ -300,7 +308,7 @@ public class HistoryFragment extends Fragment implements
             mChartQ.setOnChartGestureListener(this);
             mChartQ.setOnChartValueSelectedListener(this);
             mChartQ.setDrawGridBackground(false);
-            mChartQ.setDrawBorders(true);
+            //mChartQ.setDrawBorders(true);
             mChartQ.setDescription("");
             mChartQ.setNoDataTextDescription("You need to provide data for the chart.");
             mChartQ.setHighlightEnabled(true);
@@ -316,19 +324,24 @@ public class HistoryFragment extends Fragment implements
             leftAxis.setAxisMaxValue(220f);
             leftAxis.setAxisMinValue(-50f);
             leftAxis.setStartAtZero(false);
+            leftAxis.setTextSize(12);
+            leftAxis.setTextColor(Color.WHITE);
             leftAxis.enableGridDashedLine(10f, 10f, 0f);
             leftAxis.setDrawLimitLinesBehindData(true);
             mChartQ.getAxisRight().setEnabled(false);
             mChartQ.animateX(2500, Easing.EasingOption.EaseInOutQuart);
             mChartQ.invalidate();
             mChartQ.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+            //mChartQ.getXAxis().
             // get the legend (only possible after setting data)
             Legend l = mChartQ.getLegend();
             // modify the legend ...
             // l.setPosition(LegendPosition.LEFT_OF_CHART);
             l.setForm(LegendForm.LINE);
         }
+
         {
+            /*
             mChartG.setOnChartGestureListener(this);
             mChartG.setOnChartValueSelectedListener(this);
             mChartG.setDrawGridBackground(false);
@@ -360,6 +373,7 @@ public class HistoryFragment extends Fragment implements
             // modify the legend ...
             // l.setPosition(LegendPosition.LEFT_OF_CHART);
             l.setForm(LegendForm.LINE);
+            */
         }
         setData(45, 100);
         mactmain.mviewHis = mview;
@@ -539,7 +553,7 @@ public class HistoryFragment extends Fragment implements
         int i = 0;
         float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
-            xVals.add(info.TM);
+            xVals.add("6-12 12:00");//(info.TM);
             fval = Float.parseFloat(info.Q);
             if(fminq > fval) fminq = fval;
             if(fmaxq < fval) fmaxq = fval;
@@ -567,60 +581,25 @@ public class HistoryFragment extends Fragment implements
             leftAxis.setAxisMinValue(fminq * 0.9f);
         }
         {
-            YAxis leftAxis = mChartG.getAxisLeft();
-            leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
-            leftAxis.setAxisMaxValue(fmaxg * 1.1f);
-            leftAxis.setAxisMinValue(fming * 0.9f);
+            //YAxis leftAxis = mChartG.getAxisLeft();
+           // leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+           // leftAxis.setAxisMaxValue(fmaxg * 1.1f);
+           // leftAxis.setAxisMinValue(fming * 0.9f);
         }
 
         LineDataSet set1 = new LineDataSet(yValsQ, "流量");
         //set1.enableDashedLine(10f, 5f, 0f);
         set1.setColor(Color.RED);
-        set1.setCircleColor(Color.WHITE);
+        //set1.setCircleColor(Color.WHITE);
         set1.setLineWidth(2f);
-        set1.setCircleSize(3f);
+        //set1.setCircleSize(2f);
         set1.setDrawCircleHole(false);
-        set1.setValueTextSize(9f);
-        set1.setFillAlpha(65);
-        set1.setDrawCubic(true);
-        set1.setFillColor(Color.BLACK);
+        set1.setValueTextSize(12f);
+        //set1.setFillAlpha(65);
+        //set1.setDrawCubic(true);
+        //set1.setFillColor(Color.BLACK);
+        //set1.setValueTextColor(Color.WHITE);
 
-        LineDataSet set2 = new LineDataSet(yValsZ, "水位");
-        set2.setAxisDependency(YAxis.AxisDependency.RIGHT);
-        set2.setColor(Color.RED);
-        set2.setCircleColor(Color.WHITE);
-        set2.setLineWidth(2f);
-        set2.setCircleSize(3f);
-        set2.setFillAlpha(65);
-        set2.setFillColor(Color.RED);
-        set2.setDrawCircleHole(false);
-        set2.setDrawCubic(true);
-        set2.setHighLightColor(Color.rgb(244, 117, 117));
-
-        LineDataSet setG = new LineDataSet(yValsG, "开度");
-        setG.setAxisDependency(YAxis.AxisDependency.RIGHT);
-        setG.setColor(Color.RED);
-        setG.setCircleColor(Color.WHITE);
-        setG.setLineWidth(2f);
-        setG.setCircleSize(3f);
-        setG.setFillAlpha(65);
-        setG.setFillColor(Color.RED);
-        setG.setDrawCircleHole(false);
-        setG.setDrawCubic(true);
-        setG.setHighLightColor(Color.rgb(244, 117, 117));
-
-        {
-            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
-            dataSets.add(set2);
-
-            // create a data object with the datasets
-            LineData data = new LineData(xVals, dataSets);
-            data.setValueTextColor(Color.WHITE);
-            data.setValueTextSize(12f);
-
-            // set data
-            mChartZ.setData(data);
-        }
 
         {
             ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
@@ -635,17 +614,62 @@ public class HistoryFragment extends Fragment implements
             mChartQ.setData(data);
         }
 
+
+
+        LineDataSet set2 = new LineDataSet(yValsZ, "水位");
+        set2.setAxisDependency(YAxis.AxisDependency.RIGHT);
+        set2.setColor(Color.RED);
+        //set2.setCircleColor(Color.WHITE);
+        set2.setLineWidth(2f);
+        //set2.setCircleSize(3f);
+        //set2.setFillAlpha(65);
+       // set2.setFillColor(Color.WHITE);
+        //set2.setDrawCircleHole(false);
+        //set2.setDrawCubic(true);
+        //set2.setHighLightColor(Color.rgb(244, 117, 117));
+
         {
             ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
-            dataSets.add(setG);
+            dataSets.add(set2);
 
             // create a data object with the datasets
             LineData data = new LineData(xVals, dataSets);
+            data.setDrawValues(false);
+
             data.setValueTextColor(Color.WHITE);
             data.setValueTextSize(12f);
 
+
             // set data
-            mChartG.setData(data);
+            mChartZ.setData(data);
+        }
+/*
+        LineDataSet setG = new LineDataSet(yValsG, "开度");
+        setG.setAxisDependency(YAxis.AxisDependency.RIGHT);
+        setG.setColor(Color.RED);
+        setG.setCircleColor(Color.WHITE);
+        setG.setLineWidth(2f);
+        setG.setCircleSize(3f);
+        setG.setFillAlpha(65);
+        setG.setFillColor(Color.RED);
+        setG.setDrawCircleHole(false);
+        //setG.setDrawCubic(true);
+        setG.setHighLightColor(Color.rgb(244, 117, 117));
+        */
+
+
+
+        {
+          //  ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+          //  dataSets.add(setG);
+
+            // create a data object with the datasets
+           // LineData data = new LineData(xVals, dataSets);
+           // data.setValueTextColor(Color.WHITE);
+           // data.setValueTextSize(12f);
+
+            // set data
+           // mChartG.setData(data);
         }
     }
 
