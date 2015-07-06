@@ -44,6 +44,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.AxisValue;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.view.LineChartView;
+/*
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendPosition;
@@ -74,6 +81,7 @@ import com.github.mikephil.charting.data.filter.Approximator.ApproximatorType;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.Highlight;
+*/
 
 /**
  * A simple {@link Fragment} subclass.
@@ -83,8 +91,8 @@ import com.github.mikephil.charting.utils.Highlight;
  * Use the {@link HistoryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HistoryFragment extends Fragment implements
-        OnChartGestureListener, OnChartValueSelectedListener{
+public class HistoryFragment extends Fragment{
+       // implements OnChartGestureListener, OnChartValueSelectedListener{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -98,7 +106,7 @@ public class HistoryFragment extends Fragment implements
     private ViewPager mPager;
     private List<View> listViews;
 
-    private LineChart mChartZ,mChartQ;//,mChartG;
+    private LineChartView mChartZ,mChartQ;//,mChartG;
 
     private MsgListView mview;
     private MsgListViewAdapter madp;
@@ -156,8 +164,8 @@ public class HistoryFragment extends Fragment implements
         listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
         //listViews.add(inflater.inflate(R.layout.fragment_history_chart, null));
         mview = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
-        mChartZ = (LineChart) listViews.get(1).findViewById(R.id.chart1);
-        mChartQ = (LineChart) listViews.get(2).findViewById(R.id.chart1);
+        mChartZ = (LineChartView) listViews.get(1).findViewById(R.id.chart1);
+        mChartQ = (LineChartView) listViews.get(2).findViewById(R.id.chart1);
         //mChartG = (LineChart) listViews.get(3).findViewById(R.id.chart1);
         //mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
         mdata = new Vector<STCDINFO>();
@@ -263,6 +271,7 @@ public class HistoryFragment extends Fragment implements
         mPager.setAdapter(new MyPagerAdapter(listViews));
         mPager.setCurrentItem(0);
         mPager.setOnPageChangeListener(new MyOnPageChangeListener());
+        /*
         {
             mChartZ.setOnChartGestureListener(this);
             mChartZ.setOnChartValueSelectedListener(this);
@@ -339,6 +348,7 @@ public class HistoryFragment extends Fragment implements
             // l.setPosition(LegendPosition.LEFT_OF_CHART);
             l.setForm(LegendForm.LINE);
         }
+        */
 
         {
             /*
@@ -545,29 +555,65 @@ public class HistoryFragment extends Fragment implements
     }
 
     public void setData(int count, float range) {
-        ArrayList<String> xVals = new ArrayList<String>();
-        ArrayList<Entry> yValsQ = new ArrayList<Entry>();
-        ArrayList<Entry> yValsZ = new ArrayList<Entry>();
-        ArrayList<Entry> yValsG = new ArrayList<Entry>();
+        ArrayList<AxisValue> xVals = new ArrayList<AxisValue>();
+        ArrayList<PointValue> yValsQ = new ArrayList<PointValue>();
+        ArrayList<PointValue> yValsZ = new ArrayList<PointValue>();
+        ArrayList<PointValue> yValsG = new ArrayList<PointValue>();
         count = mdata.size();
         int i = 0;
         float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
-            xVals.add("6-12 12:00");//(info.TM);
+            xVals.add(new AxisValue(i).setLabel(info.TM));//("6-12 12:00");//(info.TM);
             fval = Float.parseFloat(info.Q);
             if(fminq > fval) fminq = fval;
             if(fmaxq < fval) fmaxq = fval;
-            yValsQ.add(new Entry(fval,i));
+            yValsQ.add(new PointValue(i,fval));
             fval = Float.parseFloat(info.Z);
             if(fminz > fval) fminz = fval;
             if(fmaxz < fval) fmaxz = fval;
-            yValsZ.add(new Entry(fval, i));
+            yValsZ.add(new PointValue(i,fval));
             fval = Float.parseFloat(info.GTOPHGT);
             if(fming > fval) fming = fval;
             if(fmaxg < fval) fmaxg = fval;
-            yValsG.add(new Entry(fval, i));
+            yValsG.add(new PointValue(i,fval));
             i++;
         }
+
+        //In most cased you can call data model methods in builder-pattern-like manner.
+        Line line = new Line(yValsQ).setColor(Color.BLUE);
+        line.setCubic(false);
+        line.setHasPoints(false);
+        line.setStrokeWidth(2);
+
+        List<Line> lines = new ArrayList<Line>();
+        lines.add(line);
+
+        LineChartData data = new LineChartData();
+        data.setLines(lines);
+
+        //坐标轴
+        Axis axisX = new Axis(); //X轴
+        axisX.setHasTiltedLabels(true);
+        axisX.setTextColor(Color.WHITE);
+        axisX.setName("采集时间");
+
+        axisX.setMaxLabelChars(5);
+        axisX.setValues(xVals);
+        axisX.setHasLines(true);
+
+        Axis axisY = new Axis();  //Y轴
+        axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
+        axisY.setHasLines(true);
+        axisY.setName("水位(m)");
+        data.setAxisYLeft(axisY);
+
+
+        data.setAxisXBottom(axisX);
+
+        mChartQ.setLineChartData(data);
+
+
+        /*
         {
             YAxis leftAxis = mChartZ.getAxisLeft();
             leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
@@ -580,6 +626,7 @@ public class HistoryFragment extends Fragment implements
             leftAxis.setAxisMaxValue(fmaxq * 1.1f);
             leftAxis.setAxisMinValue(fminq * 0.9f);
         }
+        */
         {
             //YAxis leftAxis = mChartG.getAxisLeft();
            // leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
@@ -587,20 +634,20 @@ public class HistoryFragment extends Fragment implements
            // leftAxis.setAxisMinValue(fming * 0.9f);
         }
 
-        LineDataSet set1 = new LineDataSet(yValsQ, "流量");
+        //LineDataSet set1 = new LineDataSet(yValsQ, "流量");
         //set1.enableDashedLine(10f, 5f, 0f);
-        set1.setColor(Color.RED);
+        //set1.setColor(Color.RED);
         //set1.setCircleColor(Color.WHITE);
-        set1.setLineWidth(2f);
+        //set1.setLineWidth(2f);
         //set1.setCircleSize(2f);
-        set1.setDrawCircleHole(false);
-        set1.setValueTextSize(12f);
+        //set1.setDrawCircleHole(false);
+        //set1.setValueTextSize(12f);
         //set1.setFillAlpha(65);
         //set1.setDrawCubic(true);
         //set1.setFillColor(Color.BLACK);
         //set1.setValueTextColor(Color.WHITE);
 
-
+/*
         {
             ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
             dataSets.add(set1);
@@ -643,6 +690,7 @@ public class HistoryFragment extends Fragment implements
             // set data
             mChartZ.setData(data);
         }
+        */
 /*
         LineDataSet setG = new LineDataSet(yValsG, "开度");
         setG.setAxisDependency(YAxis.AxisDependency.RIGHT);
@@ -673,6 +721,7 @@ public class HistoryFragment extends Fragment implements
         }
     }
 
+    /*
     @Override
     public void onChartLongPressed(MotionEvent me) {
         Log.i("LongPress", "Chart longpressed.");
@@ -713,4 +762,5 @@ public class HistoryFragment extends Fragment implements
     public void onNothingSelected() {
         Log.i("Nothing selected", "Nothing selected.");
     }
+    */
 }
