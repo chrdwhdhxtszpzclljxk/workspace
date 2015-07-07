@@ -20,6 +20,7 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -44,11 +45,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import lecho.lib.hellocharts.gesture.ZoomType;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
 import lecho.lib.hellocharts.model.Line;
 import lecho.lib.hellocharts.model.LineChartData;
 import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.Viewport;
 import lecho.lib.hellocharts.view.LineChartView;
 /*
 import com.github.mikephil.charting.charts.LineChart;
@@ -112,6 +115,7 @@ public class HistoryFragment extends Fragment{
     private MsgListViewAdapter madp;
     public Vector<STCDINFO> mdata;
     public ActMain mactmain;
+    private TextView tvStnmZ,tvTmZ,tvStnmQ,tvTmQ;
 
 
     // TODO: Rename and change types of parameters
@@ -166,6 +170,10 @@ public class HistoryFragment extends Fragment{
         mview = (MsgListView) listViews.get(0).findViewById(android.R.id.list);
         mChartZ = (LineChartView) listViews.get(1).findViewById(R.id.chart1);
         mChartQ = (LineChartView) listViews.get(2).findViewById(R.id.chart1);
+        tvStnmZ = (TextView) listViews.get(1).findViewById(R.id.tvstnm);
+        tvTmZ = (TextView) listViews.get(1).findViewById(R.id.tvtm);
+        tvStnmQ = (TextView) listViews.get(2).findViewById(R.id.tvstnm);
+        tvTmQ = (TextView) listViews.get(2).findViewById(R.id.tvtm);
         //mChartG = (LineChart) listViews.get(3).findViewById(R.id.chart1);
         //mmyView = (MsgListView) listViews.get(2).findViewById(android.R.id.list);
         mdata = new Vector<STCDINFO>();
@@ -559,11 +567,16 @@ public class HistoryFragment extends Fragment{
         ArrayList<PointValue> yValsQ = new ArrayList<PointValue>();
         ArrayList<PointValue> yValsZ = new ArrayList<PointValue>();
         ArrayList<PointValue> yValsG = new ArrayList<PointValue>();
+        tvStnmQ.setText(mactmain.stnmh + " - 流量");
+        tvStnmZ.setText(mactmain.stnmh + " - 水位");
+        String strdate = mactmain.sbegin + " - " + mactmain.send;
+        tvTmQ.setText(strdate);
+        tvTmZ.setText(strdate);
         count = mdata.size();
         int i = 0;
         float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
-            xVals.add(new AxisValue(i).setLabel(info.TM));//("6-12 12:00");//(info.TM);
+            xVals.add(new AxisValue(i).setLabel(info.TM.substring(5,16)));//("6-12 12:00");//(info.TM);
             fval = Float.parseFloat(info.Q);
             if(fminq > fval) fminq = fval;
             if(fmaxq < fval) fmaxq = fval;
@@ -579,39 +592,81 @@ public class HistoryFragment extends Fragment{
             i++;
         }
 
-        //In most cased you can call data model methods in builder-pattern-like manner.
-        Line line = new Line(yValsQ).setColor(Color.BLUE);
-        line.setCubic(false);
-        line.setHasPoints(false);
-        line.setStrokeWidth(2);
+        {
+            //In most cased you can call data model methods in builder-pattern-like manner.
+            Line line = new Line(yValsQ).setColor(Color.BLUE);
+            line.setCubic(false);
+            line.setHasPoints(false);
+            line.setStrokeWidth(2);
+            List<Line> lines = new ArrayList<Line>();
+            lines.add(line);
+            LineChartData data = new LineChartData();
+            data.setLines(lines);
+            //坐标轴
+            Axis axisX = new Axis(); //X轴
+            axisX.setHasTiltedLabels(true);
+            axisX.setTextColor(Color.WHITE);
+            axisX.setName("采集时间");
+            axisX.setTextSize(10);
+            axisX.setMaxLabelChars(9);
+            axisX.setInside(true);
+            axisX.setValues(xVals);
+            axisX.setHasLines(true);
+            Axis axisY = new Axis();  //Y轴
+            axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
+            axisY.setHasLines(true);
+            axisY.setName("流量(m3/s)");
+            data.setAxisYLeft(axisY);
+            data.setAxisXBottom(axisX);
 
-        List<Line> lines = new ArrayList<Line>();
-        lines.add(line);
+            mChartQ.setLineChartData(data);
+            // Set selection mode to keep selected month column highlighted.
+            mChartQ.setValueSelectionEnabled(true);
+            mChartQ.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
 
-        LineChartData data = new LineChartData();
-        data.setLines(lines);
+            Viewport viewport = mChartQ.getMaximumViewport();
+            viewport.set(viewport.left, viewport.top, viewport.right, -0f);
+            mChartQ.setMaximumViewport(viewport);
+            mChartQ.setCurrentViewport(viewport);
+        }
 
-        //坐标轴
-        Axis axisX = new Axis(); //X轴
-        axisX.setHasTiltedLabels(true);
-        axisX.setTextColor(Color.WHITE);
-        axisX.setName("采集时间");
+        {
+            //In most cased you can call data model methods in builder-pattern-like manner.
+            Line line = new Line(yValsZ).setColor(Color.BLUE);
+            line.setCubic(false);
+            line.setHasPoints(false);
+            line.setStrokeWidth(2);
+            List<Line> lines = new ArrayList<Line>();
+            lines.add(line);
+            LineChartData data = new LineChartData();
+            data.setLines(lines);
+            //坐标轴
+            Axis axisX = new Axis(); //X轴
+            axisX.setHasTiltedLabels(true);
+            axisX.setTextColor(Color.WHITE);
+            axisX.setName("采集时间");
+            axisX.setTextSize(10);
+            axisX.setMaxLabelChars(9);
+            axisX.setInside(true);
+            axisX.setValues(xVals);
+            axisX.setHasLines(true);
+            Axis axisY = new Axis();  //Y轴
+            axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
+            axisY.setHasLines(true);
+            axisY.setName("水位(m)");
+            data.setAxisYLeft(axisY);
+            data.setAxisXBottom(axisX);
 
-        axisX.setMaxLabelChars(5);
-        axisX.setValues(xVals);
-        axisX.setHasLines(true);
+            mChartZ.setLineChartData(data);
+            // Set selection mode to keep selected month column highlighted.
+            mChartZ.setValueSelectionEnabled(true);
+            mChartZ.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
 
-        Axis axisY = new Axis();  //Y轴
-        axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
-        axisY.setHasLines(true);
-        axisY.setName("水位(m)");
-        data.setAxisYLeft(axisY);
-
-
-        data.setAxisXBottom(axisX);
-
-        mChartQ.setLineChartData(data);
-
+            Viewport viewport = mChartZ.getMaximumViewport();
+            viewport.set(viewport.left, viewport.top, viewport.right, -0f);
+            mChartZ.setMaximumViewport(viewport);
+            mChartZ.setCurrentViewport(viewport);
+        }
 
         /*
         {
