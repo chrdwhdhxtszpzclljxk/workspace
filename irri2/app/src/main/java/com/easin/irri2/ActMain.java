@@ -47,7 +47,9 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 // 主界面
@@ -57,14 +59,22 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
     static public String serverurl = "http://test.gwgz.com/realtime.ashx";
     private FragmentManager fragmentManager;
     static public List<String> mmy;
+    static public Map<String, String> msetup;
     public String sbegin,send,stnmh;
     public TextView tvbegin,tvend;
+    public EditText etServerUrl;
     static public MsgListView mviewHis;
 
+    public String getserverurl(){
+        String ret = msetup.get("serverurl");
+        if(ret == null) ret = serverurl;
+        return ret;
+    }
     @Override
     protected void onPause(){
         super.onPause();
         //put(msetup);
+        setupsave(msetup,"irri_setup.dat");
         mmyput(mmy);
     }
 
@@ -73,6 +83,10 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         super.onCreate(savedInstanceState);
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity);
+        msetup = setupload("irri_setup.dat");
+        if(msetup.get("serverurl") == null){
+            msetup.put("serverurl",serverurl);
+        }
         mmy = mmyget();
         fragmentManager = getFragmentManager();
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.rg_tab);
@@ -135,7 +149,7 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         new AsyncTask<Object, Object, Object>() {
             protected Object doInBackground(Object... params) {
                 String stcd = params[0].toString();
-                HttpGet httpRequest = new HttpGet(serverurl+"?cmd=prop&stcd=" + stcd);
+                HttpGet httpRequest = new HttpGet(getserverurl()+"?cmd=prop&stcd=" + stcd);
                 try{
                     HttpClient httpClient = new DefaultHttpClient();
                     HttpResponse httpResponse = httpClient.execute(httpRequest);
@@ -193,7 +207,6 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
 
     // * 向本地写入数据
     private void mmyput(List<String> list) {
-
         try {
             // 打开文件
             File f = new File(getFilesDir(),"irri_mmy.dat");
@@ -243,6 +256,59 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
 
         return list;
     }
+
+    // * 向本地写入数据
+    private void setupsave(Map<String, String> list,String file) {
+        try {
+            // 打开文件
+            File f = new File(getFilesDir(),file);
+            FileOutputStream fos = new FileOutputStream(f);
+
+            // 将数据写入文件
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(list);
+
+            // 释放资源
+            oos.close();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // * 从本地读取数据
+    @SuppressWarnings("unchecked")
+    private Map<String, String> setupload(String file) {
+        Map<String, String> list = new HashMap<String, String>();
+        try {
+            File f = new File(getFilesDir(),file);
+            if (!f.exists()) {
+                return list;
+            }
+
+            // 打开文件
+            FileInputStream fis = new FileInputStream(f);
+
+            // 读取文件
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            list = (Map<String, String>) ois.readObject();
+            // 释放资源
+            ois.close();
+            fis.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+
 
     public void ondatebeginpickerclick(View v){ // 创建DatePickerDialog对象
         Calendar calendar=Calendar.getInstance();

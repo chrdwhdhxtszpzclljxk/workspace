@@ -23,7 +23,7 @@ public class FragmentFactory {
                 fragment = com.easin.irri2.MyFragment.newInstance("hello","abc",_actmain);
                 break;
             case R.id.rb_global:
-                fragment = new GlobalFragment();
+                fragment = com.easin.irri2.AboutmeFragment.newInstance("hello","abc",_actmain);
                 break;
         }
         return fragment;

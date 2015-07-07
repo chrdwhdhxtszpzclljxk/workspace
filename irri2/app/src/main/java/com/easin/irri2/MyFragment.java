@@ -108,7 +108,7 @@ public class MyFragment extends Fragment {
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpPost httpRequest = new HttpPost(mactmain.serverurl);
+                        HttpPost httpRequest = new HttpPost(mactmain.getserverurl());
                         List<NameValuePair> cmdlist = new ArrayList<NameValuePair>();
                         NameValuePair cmd = new BasicNameValuePair("cmd", "my");
                         cmdlist.add(cmd);

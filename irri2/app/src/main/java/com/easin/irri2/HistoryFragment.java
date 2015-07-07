@@ -185,7 +185,7 @@ public class HistoryFragment extends Fragment{
             public void onRefresh() {
                 new AsyncTask<Object, Object, Object>() {
                     protected Object doInBackground(Object... params) {
-                        HttpGet httpRequest = new HttpGet(mactmain.serverurl + "?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
+                        HttpGet httpRequest = new HttpGet(mactmain.getserverurl() + "?cmd=gethistorybyname&stnm=" + mactmain.stnmh + "&sbegin=" + mactmain.sbegin + "&send=" + mactmain.send);
                         try {
                             HttpClient httpClient = new DefaultHttpClient();
                             HttpResponse httpResponse = httpClient.execute(httpRequest);
