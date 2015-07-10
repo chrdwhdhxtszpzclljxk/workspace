@@ -56,7 +56,7 @@ import java.util.Vector;
 public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListener {
     static public String[] areas = new String[]{"加关注","查询","属性"};
     static public String[] areasmy = new String[]{"取消关注","查询","属性"};
-    static public String serverurl = "http://test.gwgz.com/realtime.ashx";
+    static public String serverurl = "http://1.85.44.234/realtime.ashx";
     private FragmentManager fragmentManager;
     static public List<String> mmy;
     static public Map<String, String> msetup;

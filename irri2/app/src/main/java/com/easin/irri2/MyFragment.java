@@ -167,9 +167,10 @@ public class MyFragment extends Fragment {
                                     info.STCD = jsonObject2.getString(0).trim();
                                     info.STNM = jsonObject2.getString(1).trim();
                                     info.TM = jsonObject2.getString(2).trim();
-                                    info.Z = jsonObject2.getString(3).trim();
-                                    info.Q = jsonObject2.getString(4).trim();
-                                    info.GTOPHGT = jsonObject2.getString(5).trim();
+                                    info.UPZ = jsonObject2.getString(3).trim();
+                                    info.DWZ = jsonObject2.getString(4).trim();
+                                    info.TGTQ = jsonObject2.getString(5).trim();
+                                    info.GTOPHGT = jsonObject2.getString(6).trim();
                                     int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
                                     if (idx < 0) {
                                         mdata.add(info);
