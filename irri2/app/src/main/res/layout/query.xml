@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
-        android:onClick="ondateendpickerclick"
+        android:onClick="ondatebeginpickerclick"
         android:text="Large Text"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:text="Large Text"
         android:clickable="true"
-        android:onClick="ondatebeginpickerclick"
+        android:onClick="ondateendpickerclick"
         android:textAppearance="?android:attr/textAppearanceLarge" />    
 
 

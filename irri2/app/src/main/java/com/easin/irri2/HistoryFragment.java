@@ -224,9 +224,10 @@ public class HistoryFragment extends Fragment{
                                     info.STCD = jsonObject2.getString(0).trim();
                                     info.STNM = jsonObject2.getString(1).trim();
                                     info.TM = jsonObject2.getString(2).trim();
-                                    info.Z = jsonObject2.getString(3).trim();
-                                    info.Q = jsonObject2.getString(4).trim();
-                                    info.GTOPHGT = jsonObject2.getString(5).trim();
+                                    info.UPZ = jsonObject2.getString(3).trim();
+                                    info.DWZ = jsonObject2.getString(4).trim();
+                                    info.TGTQ = jsonObject2.getString(5).trim();
+                                    info.GTOPHGT = jsonObject2.getString(6).trim();
                                     //int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
                                     //if (idx < 0) {
                                     mdata.add(info);
@@ -577,18 +578,30 @@ public class HistoryFragment extends Fragment{
         float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
             xVals.add(new AxisValue(i).setLabel(info.TM.substring(5,16)));//("6-12 12:00");//(info.TM);
-            fval = Float.parseFloat(info.Q);
+            if(info.TGTQ!=null && info.TGTQ.length()!=0  && !info.GTOPHGT.equals("null")) {
+                fval = Float.parseFloat(info.TGTQ);
+            }else{
+                fval=0;
+            }
             if(fminq > fval) fminq = fval;
             if(fmaxq < fval) fmaxq = fval;
             yValsQ.add(new PointValue(i,fval));
-            fval = Float.parseFloat(info.Z);
+            if(info.UPZ!=null && info.UPZ.length()!=0  && !info.GTOPHGT.equals("null")) {
+                fval = Float.parseFloat(info.UPZ);
+            }else{
+                fval=0;
+            }
             if(fminz > fval) fminz = fval;
             if(fmaxz < fval) fmaxz = fval;
             yValsZ.add(new PointValue(i,fval));
-            fval = Float.parseFloat(info.GTOPHGT);
-            if(fming > fval) fming = fval;
-            if(fmaxg < fval) fmaxg = fval;
-            yValsG.add(new PointValue(i,fval));
+            if(info.GTOPHGT!=null && info.GTOPHGT.length()!=0 && !info.GTOPHGT.equals("null")) {
+                fval = Float.parseFloat(info.GTOPHGT);
+            }else{
+                fval=0;
+            }
+            if (fming > fval) fming = fval;
+            if (fmaxg < fval) fmaxg = fval;
+            yValsG.add(new PointValue(i, fval));
             i++;
         }
 

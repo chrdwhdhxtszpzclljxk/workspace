@@ -75,8 +75,8 @@ public class MsgListViewAdapter  extends BaseAdapter {
         convertView.setBackgroundColor(colors[colorPos]);
         title.setText(mdata.get(position).STNM);//("Hello");//
         text.setText(mdata.get(position).TM);//("2015-06-21");//
-        tvz.setText("水位(m)：" + mdata.get(position).Z);
-        tvq.setText("流量(m3/s)：" + mdata.get(position).Q);
+        tvz.setText("水位(m)：" + mdata.get(position).UPZ);
+        tvq.setText("流量(m3/s)：" + mdata.get(position).TGTQ);
         tvgtophgt.setText("开度(m)：" + mdata.get(position).GTOPHGT);
         //iamge.setImageResource(R.drawable.jay);
         return convertView;
@@ -85,12 +85,13 @@ public class MsgListViewAdapter  extends BaseAdapter {
 }
 
 class STCDINFO{
-    public String STCD;
-    public String STNM;
-    public String TM;
-    public String Z;
-    public String Q;
-    public String GTOPHGT;
+    public String STCD;  //测站编号
+    public String STNM;  //测站名称
+    public String TM;    //时间
+    public String UPZ;   //闸前水位
+    public String DWZ;   //闸后水位
+    public String TGTQ;  //过闸总流量
+    public String GTOPHGT;  //闸门开度
 }
 
 @SuppressWarnings("rawtypes")

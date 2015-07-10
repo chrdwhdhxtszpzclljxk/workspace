@@ -56,13 +56,13 @@ namespace irri
                 SqlConnection sc = new SqlConnection(constr);
                 SqlCommand sm = new SqlCommand();
                 sm.CommandType = CommandType.StoredProcedure;
-                sm.CommandText = "[irri_gethistorybyname]";
+                sm.CommandText = "[sp_gethistorybyname]";
                 sm.Connection = sc;
                 SqlParameter param0 = new SqlParameter("@stnm", name);
                 sm.Parameters.Add(param0);
-                SqlParameter param1 = new SqlParameter("@begind", begin);
+                SqlParameter param1 = new SqlParameter("@stm", begin);
                 sm.Parameters.Add(param1);
-                SqlParameter param2 = new SqlParameter("@endd", end);
+                SqlParameter param2 = new SqlParameter("@etm", end);
                 sm.Parameters.Add(param2);
                 sc.Open();
                 SqlDataReader dr = sm.ExecuteReader();
@@ -97,7 +97,7 @@ namespace irri
                 SqlConnection sc = new SqlConnection(constr);
                 SqlCommand sm = new SqlCommand();
                 sm.CommandType = CommandType.StoredProcedure;
-                sm.CommandText = "[irri_getmy]";
+                sm.CommandText = "[sp_getmy]";
                 sm.Connection = sc;
                 SqlParameter param0 = new SqlParameter("@stcds", stcds);
                 sm.Parameters.Add(param0);
@@ -134,7 +134,7 @@ namespace irri
                 SqlConnection sc = new SqlConnection(constr);
                 SqlCommand sm = new SqlCommand();
                 sm.CommandType = CommandType.StoredProcedure;
-                sm.CommandText = "[irri_getprop]";
+                sm.CommandText = "[sp_getprop]";
                 sm.Connection = sc;
                 SqlParameter param0 = new SqlParameter("@stcd", stcd);
                 sm.Parameters.Add(param0);
@@ -171,7 +171,7 @@ namespace irri
                 SqlConnection sc = new SqlConnection(constr);
                 SqlCommand sm = new SqlCommand();
                 sm.CommandType = CommandType.StoredProcedure;
-                sm.CommandText = "[irri_getrealtime]";
+                sm.CommandText = "[sp_getrealtime]";
                 sm.Connection = sc;
                 sc.Open();
                 SqlDataReader dr = sm.ExecuteReader();
