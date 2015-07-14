@@ -38,31 +38,45 @@
     android:orientation="horizontal" >
 
     <TextView
-        android:id="@+id/tvz"
-        android:layout_width="wrap_content"
+        android:id="@+id/tvupz"
+        android:layout_width="230px"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="水位："
+        android:layout_weight="2"
+        android:text="闸前水位："
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
-        android:id="@+id/tvq"
+        android:id="@+id/tvdwz"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="流量："
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <TextView
-        android:id="@+id/tvgtophgt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="开度："
+        android:text="闸后水位："
         android:layout_gravity="right"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
 
+        <TextView
+            android:id="@+id/tvtgtq"
+            android:layout_width="230px"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="过闸流量："
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TextView
+            android:id="@+id/tvgtophgt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="闸门开度："
+            android:layout_gravity="right"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    </LinearLayout>
 
 </LinearLayout>
