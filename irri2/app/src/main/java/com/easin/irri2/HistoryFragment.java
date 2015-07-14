@@ -235,6 +235,8 @@ public class HistoryFragment extends Fragment{
                                     //} else if (idx < mdata.size()) {
                                     //    mdata.set(idx, info);
                                     // }
+                                }
+                                if(jsonrows.length()>0){
                                     setData(50, 200);
                                 }
                             }
@@ -394,7 +396,7 @@ public class HistoryFragment extends Fragment{
             l.setForm(LegendForm.LINE);
             */
         }
-        setData(45, 100);
+        //setData(45, 100);
         mactmain.mviewHis = mview;
         return v;
     }
@@ -568,8 +570,8 @@ public class HistoryFragment extends Fragment{
         ArrayList<PointValue> yValsQ = new ArrayList<PointValue>();
         ArrayList<PointValue> yValsZ = new ArrayList<PointValue>();
         ArrayList<PointValue> yValsG = new ArrayList<PointValue>();
-        tvStnmQ.setText(mactmain.stnmh + " - 流量");
-        tvStnmZ.setText(mactmain.stnmh + " - 水位");
+        tvStnmQ.setText(mactmain.stnmh + " -- 过闸流量");
+        tvStnmZ.setText(mactmain.stnmh + " -- 闸前水位");
         String strdate = mactmain.sbegin + " - " + mactmain.send;
         tvTmQ.setText(strdate);
         tvTmZ.setText(strdate);
@@ -578,7 +580,7 @@ public class HistoryFragment extends Fragment{
         float fmin = 9999999.0f,fmax = -999999.0f,fval = 0.0f,fminz = fmin,fmaxz = fmax,fminq = fmin, fmaxq = fmax,fming = fmin,fmaxg = fmax;
         for(STCDINFO info:mdata){
             xVals.add(new AxisValue(i).setLabel(info.TM.substring(5,16)));//("6-12 12:00");//(info.TM);
-            if(info.TGTQ!=null && info.TGTQ.length()!=0  && !info.GTOPHGT.equals("null")) {
+            if(info.TGTQ!=null && info.TGTQ.length()!=0  && !info.TGTQ.equals("null")) {
                 fval = Float.parseFloat(info.TGTQ);
             }else{
                 fval=0;
@@ -586,7 +588,7 @@ public class HistoryFragment extends Fragment{
             if(fminq > fval) fminq = fval;
             if(fmaxq < fval) fmaxq = fval;
             yValsQ.add(new PointValue(i,fval));
-            if(info.UPZ!=null && info.UPZ.length()!=0  && !info.GTOPHGT.equals("null")) {
+            if(info.UPZ!=null && info.UPZ.length()!=0  && !info.UPZ.equals("null")) {
                 fval = Float.parseFloat(info.UPZ);
             }else{
                 fval=0;
@@ -594,6 +596,7 @@ public class HistoryFragment extends Fragment{
             if(fminz > fval) fminz = fval;
             if(fmaxz < fval) fmaxz = fval;
             yValsZ.add(new PointValue(i,fval));
+            /*
             if(info.GTOPHGT!=null && info.GTOPHGT.length()!=0 && !info.GTOPHGT.equals("null")) {
                 fval = Float.parseFloat(info.GTOPHGT);
             }else{
@@ -601,7 +604,7 @@ public class HistoryFragment extends Fragment{
             }
             if (fming > fval) fming = fval;
             if (fmaxg < fval) fmaxg = fval;
-            yValsG.add(new PointValue(i, fval));
+            yValsG.add(new PointValue(i, fval));*/
             i++;
         }
 
@@ -615,6 +618,14 @@ public class HistoryFragment extends Fragment{
             lines.add(line);
             LineChartData data = new LineChartData();
             data.setLines(lines);
+
+            float ystop,ystar,ystep;
+            ystop = fmaxq+fmaxq*0.01f;
+            ystar = fminq-fminq*0.01f;
+            if(ystar<=0){
+                ystar=0f;
+            }
+            ystep = (ystop-ystar)*0.1f;
             //坐标轴
             Axis axisX = new Axis(); //X轴
             axisX.setHasTiltedLabels(true);
@@ -626,6 +637,7 @@ public class HistoryFragment extends Fragment{
             axisX.setValues(xVals);
             axisX.setHasLines(true);
             Axis axisY = new Axis();  //Y轴
+            //Axis axisY = Axis.generateAxisFromRange(ystar,ystop,0.05f);  //Y轴
             axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
             axisY.setHasLines(true);
             axisY.setName("流量(m3/s)");
@@ -638,8 +650,8 @@ public class HistoryFragment extends Fragment{
             mChartQ.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
 
             Viewport viewport = mChartQ.getMaximumViewport();
-            viewport.set(viewport.left, viewport.top, viewport.right, -0f);
-            mChartQ.setMaximumViewport(viewport);
+            viewport.set(viewport.left, ystop, viewport.right, ystar);
+            //mChartQ.setMaximumViewport(viewport);
             mChartQ.setCurrentViewport(viewport);
         }
 
@@ -653,6 +665,14 @@ public class HistoryFragment extends Fragment{
             lines.add(line);
             LineChartData data = new LineChartData();
             data.setLines(lines);
+
+            float ystop,ystar,ystep;
+            ystop = fmaxz+fmaxz*0.01f;
+            ystar = fminz-fminz*0.01f;
+            if(ystar<=0){
+                ystar=0f;
+            }
+            ystep = (ystop-ystar)*0.1f;
             //坐标轴
             Axis axisX = new Axis(); //X轴
             axisX.setHasTiltedLabels(true);
@@ -664,6 +684,7 @@ public class HistoryFragment extends Fragment{
             axisX.setValues(xVals);
             axisX.setHasLines(true);
             Axis axisY = new Axis();  //Y轴
+            //Axis axisY = Axis.generateAxisFromRange(ystar,ystop,0.05f);  //Y轴
             axisY.setMaxLabelChars(5); //默认是3，只能看最后三个数字
             axisY.setHasLines(true);
             axisY.setName("水位(m)");
@@ -676,8 +697,8 @@ public class HistoryFragment extends Fragment{
             mChartZ.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
 
             Viewport viewport = mChartZ.getMaximumViewport();
-            viewport.set(viewport.left, viewport.top, viewport.right, -0f);
-            mChartZ.setMaximumViewport(viewport);
+            viewport.set(viewport.left, ystop, viewport.right, ystar);
+            //mChartZ.setMaximumViewport(viewport);
             mChartZ.setCurrentViewport(viewport);
         }
 
