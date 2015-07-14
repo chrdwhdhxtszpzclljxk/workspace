@@ -95,6 +95,8 @@ class STCDINFO{
     public String DWZ;   //闸后水位
     public String TGTQ;  //过闸总流量
     public String GTOPHGT;  //闸门开度
+    public String WRZ;      //警戒水位
+    public String GRZ;      //保证水位
 }
 
 @SuppressWarnings("rawtypes")
