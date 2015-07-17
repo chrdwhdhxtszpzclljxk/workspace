@@ -16,13 +16,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.Toast;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -56,7 +61,10 @@ public class RealTimeFragment extends Fragment {
     private MsgListView mview;
     private MsgListViewAdapter madp;
     public Vector<STCDINFO> mdata;
+    public Vector<STCDINFO> mdataout;
     public ActMain mactmain;
+    public SearchView searchView;
+
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -101,12 +109,16 @@ public class RealTimeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View v =inflater.inflate(R.layout.fragment_real_time, container, false);
         mview = (MsgListView) v.findViewById(android.R.id.list);
+        searchView = (SearchView)v.findViewById(R.id.searchView);
+        mactmain.mRealTime = this;
         mdata = new Vector<STCDINFO>();
+        mdataout = new Vector<STCDINFO>();
         mview.setItemsCanFocus(false);
         mview.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        madp = new MsgListViewAdapter(getActivity(),mdata);
+        madp = new MsgListViewAdapter(getActivity(),mdataout);
         mview.setAdapter(madp);
         mview.setonRefreshListener(new MsgListView.OnRefreshListener() {
             public void onRefresh() {
@@ -151,7 +163,7 @@ public class RealTimeFragment extends Fragment {
                         try {
                             //创建一个JSON对象
                             String jsonstr = result.toString();
-                            if(jsonstr.isEmpty()) return;
+                            if (jsonstr.isEmpty()) return;
                             JSONObject jsonObject = new JSONObject(jsonstr);//.getJSONObject("parent");
                             int jsoncmd = jsonObject.getInt("cmdstatus");
                             if (jsoncmd == 1) {
@@ -166,6 +178,8 @@ public class RealTimeFragment extends Fragment {
                                     info.DWZ = jsonObject2.getString(4).trim();
                                     info.TGTQ = jsonObject2.getString(5).trim();
                                     info.GTOPHGT = jsonObject2.getString(6).trim();
+                                    if(i%2 == 0) info.warning = true;
+                                    else info.warning = false;
                                     int idx = Collections.binarySearch(mdata, info, new STCDINFO_CMP());
                                     if (idx < 0) {
                                         mdata.add(info);
@@ -174,6 +188,8 @@ public class RealTimeFragment extends Fragment {
                                         mdata.set(idx, info);
                                     }
                                 }
+
+                                filtermdata();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -213,8 +229,86 @@ public class RealTimeFragment extends Fragment {
 
         mview.OnAutoRefresh();
         mview.refreshListener.onRefresh();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            public boolean onQueryTextSubmit(String query) {
+                Toast.makeText(getActivity(), "begin search", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            public boolean onQueryTextChange(String newText) {
+                //if (newText != null && newText.length() > 0) {
+                    String strFilter = searchView.getQuery().toString();
+                    mactmain.mqueryauto = strFilter;
+                    filtermdata();
+                //}
+                return true;
+            }
+        });
+
         return v;
     }
+
+
+    public void filtermdata(){
+        if(mactmain.mqueryauto =="" || mactmain.mqueryauto =="所有"){
+            mdataout.clear();
+            mdataout.addAll(mdata);
+        }else if(mactmain.mqueryauto == "告警"){
+            mdataout.clear();
+            for(int i = 0; i < mdata.size();i++) {
+                if(mdata.get(i).warning)
+                    mdataout.add(mdata.get(i));
+            }
+        }else if(mactmain.mqueryauto == "2天"){
+            mdataout.clear();
+            SimpleDateFormat dateformat = new SimpleDateFormat("yy-MM-dd hh:mm:ss");
+            Calendar calendar=Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH,-2);
+            Date now = calendar.getTime();
+            for(int i = 0; i < mdata.size();i++) {
+                try {
+                    Date dt = dateformat.parse(mdata.get(i).TM);
+                    if(dt.before(now)){
+                        mdataout.add(mdata.get(i));
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }else if(mactmain.mqueryauto == "7天"){
+            mdataout.clear();
+            SimpleDateFormat dateformat = new SimpleDateFormat("yy-MM-dd hh:mm:ss");
+            Calendar calendar=Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH,-7);
+            Date now = calendar.getTime();
+            for(int i = 0; i < mdata.size();i++) {
+                try {
+                    Date dt = dateformat.parse(mdata.get(i).TM);
+                    if(dt.before(now)){
+                        mdataout.add(mdata.get(i));
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            mdataout.clear();
+            STCDINFO info;
+            for(int i = 0; i < mdata.size();i++) {
+                info = mdata.get(i);
+                if(info.STCD.contains(mactmain.mqueryauto) || info.STNM.contains(mactmain.mqueryauto)){
+                    mdataout.add(info);
+                }
+            }
+        }
+        madp.notifyDataSetChanged();
+    }
+
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -238,6 +332,7 @@ public class RealTimeFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mactmain.mRealTime = null;
     }
 
     /**

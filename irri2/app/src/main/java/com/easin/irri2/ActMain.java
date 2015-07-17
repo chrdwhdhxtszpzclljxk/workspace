@@ -44,9 +44,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ import java.util.Vector;
 public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListener {
     static public String[] areas = new String[]{"加关注","查询","属性"};
     static public String[] areasmy = new String[]{"取消关注","查询","属性"};
+    static public String[] querystr = new String[] {"所有","告警","2天","7天"};
     static public String serverurl = "http://1.85.44.234/realtime.ashx";
     private FragmentManager fragmentManager;
     static public List<String> mmy;
@@ -64,7 +67,8 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
     public TextView tvbegin,tvend;
     public EditText etServerUrl;
     static public MsgListView mviewHis;
-
+    static public RealTimeFragment mRealTime;
+    static public String mqueryauto="";
     public String getserverurl(){
         String ret = msetup.get("serverurl");
         if(ret == null) ret = serverurl;
@@ -104,6 +108,16 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         transaction.commit();
     }
 
+    public  void bnQueryClick(View v){
+        new AlertDialog.Builder(this).setTitle("").setItems(querystr, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                mqueryauto = querystr[which];
+                mRealTime.filtermdata();
+            }
+        }).show();
+    }
+
     public void bnHisQueryClick(View v){
         showquery(null, 0, -1, null);
     }
@@ -114,14 +128,15 @@ public class ActMain extends Activity implements RadioGroup.OnCheckedChangeListe
         final EditText name = (EditText)dialoglayout.findViewById(R.id.etname);
         if(idx > 0)  name.setText(_data.get(idx - 1).STNM);
         Calendar calendar=Calendar.getInstance();
-        calendar.add(Calendar.MONTH, -1);
+        calendar.add(Calendar.YEAR, -2);
         int year=calendar.get(Calendar.YEAR);
         int monthOfYear=calendar.get(Calendar.MONTH) + 1;
         int dayOfMonth=calendar.get(Calendar.DAY_OF_MONTH);
         TextView tvbegin  = ((TextView)dialoglayout.findViewById(R.id.tvbegin));
         TextView tvend  = ((TextView)dialoglayout.findViewById(R.id.tvend));
         tvbegin.setText(year + "-" + monthOfYear + "-" + dayOfMonth);
-        calendar.add(Calendar.MONTH, 1);
+        //calendar.add(Calendar.MONTH, 1);
+        calendar=Calendar.getInstance();
         tvend.setText(calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DAY_OF_MONTH));
         sbegin = tvbegin.getText().toString();
         send = tvend.getText().toString();
