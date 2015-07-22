@@ -62,6 +62,8 @@ public class MsgListViewAdapter  extends BaseAdapter {
         TextView tvupz = null;
         TextView tvdwz = null;
         TextView tvtgtq = null;
+        ImageView ivalert = null;
+        String val = "";
         if (convertView == null) {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.realtime_item, null);
             //iamge = (ImageView) convertView.findViewById(R.id.color_image);
@@ -72,15 +74,27 @@ public class MsgListViewAdapter  extends BaseAdapter {
         tvdwz = (TextView) convertView.findViewById(R.id.tvdwz);
         tvtgtq = (TextView) convertView.findViewById(R.id.tvtgtq);
         tvgtophgt = (TextView) convertView.findViewById(R.id.tvgtophgt);
-
+        ivalert = (ImageView)convertView.findViewById(R.id.imageView2);
+        ivalert.setVisibility(View.GONE);
+        if(mdata.get(position).warning) ivalert.setVisibility(View.VISIBLE);
         int colorPos = position % colors.length;
         convertView.setBackgroundColor(colors[colorPos]);
         title.setText(mdata.get(position).STNM);//("Hello");//
-        text.setText(mdata.get(position).TM);//("2015-06-21");//
-        tvupz.setText("闸前水位(m)：" + mdata.get(position).UPZ);
-        tvdwz.setText("闸后水位(m)：" + mdata.get(position).DWZ);
-        tvtgtq.setText("过闸流量(m3/s)：" + mdata.get(position).TGTQ);
-        tvgtophgt.setText("闸门开度(m)：" + mdata.get(position).GTOPHGT);
+        val = mdata.get(position).TM;
+        if(val == "null") val = "";
+        text.setText(val);//("2015-06-21");//
+        val = mdata.get(position).UPZ;
+        if(val == "null") val = "";
+        tvupz.setText("闸前水位(m)：" + val);
+        val = mdata.get(position).DWZ;
+        if(val == "null") val = "";
+        tvdwz.setText("闸后水位(m)：" + val);
+        val = mdata.get(position).TGTQ;
+        if(val == "null") val = "";
+        tvtgtq.setText("过闸流量(m3/s)：" + val);
+        val = mdata.get(position).GTOPHGT;
+        if(val == "null") val = "";
+        tvgtophgt.setText("闸门开度(m)：" + val);
         //iamge.setImageResource(R.drawable.jay);
         return convertView;
     }
@@ -97,6 +111,7 @@ class STCDINFO{
     public String GTOPHGT;  //闸门开度
     public String WRZ;      //警戒水位
     public String GRZ;      //保证水位
+    public boolean warning;
 }
 
 @SuppressWarnings("rawtypes")
